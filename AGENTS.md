@@ -11,6 +11,8 @@ Tracked files: only `.gitattributes` and `.DS_Store`. `docs/` and `AGENTS.md` ex
 ## Source of truth: docs/
 
 - `docs/SetuCredit_HLD_Document.pdf` — the architecture spec (2 pages). Read this before scaffolding.
+- `docs/ARCHITECTURE.md` — engineering expansion of the HLD (components, API draft, data model).
+  Derived from the HLD; if they conflict, the HLD wins.
 - `docs/SetuCredit_Pitch_Deck.pdf` / `.pptx` — product/economics context only.
 
 PDFs can't be read directly by all models. Extract text with (`uv` is installed and this is verified to work):
