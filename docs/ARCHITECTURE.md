@@ -3,8 +3,9 @@
 Engineering expansion of **HLD v1.0** (`docs/SetuCredit_HLD_Document.pdf`). The HLD is the
 product spec; if this document ever conflicts with it, the HLD wins until both are revised.
 
-Status: design stage — no code exists yet. Every module below maps to a directory that
-already exists in the repo (see the folder map in `AGENTS.md`).
+Status: **implemented for the hackathon** — runnable code under `backend/`, `scoring/`,
+`frontend/`, `infra/` (see `AGENTS.md` for exact commands). This document and the code
+should be kept in sync; where they diverge, the code is what runs.
 
 ---
 
@@ -115,6 +116,7 @@ Draft — refine when scaffolding:
 | `POST /v1/sessions/{id}/otp` | Send/verify Aadhaar OTP (DigiLocker) |
 | `GET  /v1/sessions/{id}` | Session state + next action for the PWA |
 | `POST /v1/sessions/{id}/consents` | Initiate AA consent grant; polls scope + expiry |
+| `POST /v1/sessions/{id}/consents/revoke` | Revoke active consent (DPDP), resets session state |
 | `POST /v1/sessions/{id}/appraise` | Fan-out pull → scoring; requires `CONSENT_GRANTED` |
 | `GET  /v1/appraisals/{id}` | BRI, per-source status, package handoff status |
 | `POST /v1/webhooks/disbursal` | Inbound NBFC callback (HMAC-signed) |
@@ -127,11 +129,12 @@ audio reference) — no audio is stored.
 
 **Postgres — audit ledger only** (`backend/migrations/`), metadata and compliance records:
 
-- `audit_events` — append-only: `session_id`, `event_type`, `consent_id`, `source_id`,
-  `record_count`, `model_version`, `created_at`, `payload_hash`
+- `audit_events` — append-only: `session_id`, `event_type`, `entity_id`, `consent_id`,
+  `source_id`, `record_count`, `model_version`, `payload_hash`, `created_at`
 - `consents` — consent lifecycle: scope, granted/expiry/revocation timestamps, status
-- `appraisals` — outcome record: `bri`, sources used, model version, decision handed off
-  (the borrower's underlying records are **not** here)
+- `appraisals` — outcome record: `bri`, model version, per-source ok/failed status,
+  handoff/disbursal state (the borrower's underlying records **and** derived feature
+  values are **not** here)
 
 **Redis** — OTP codes and session state with short TTLs; wiped on completion/expiry.
 
@@ -140,13 +143,14 @@ it does not belong in Postgres.
 
 ## 6. Scoring service (`scoring/`)
 
-- Separate process; receives a **feature vector** over the internal API (not raw records),
-  returns `BRI ∈ [0, 100]` + model version + top feature attributions (explainability is
-  an HLD design principle).
-- `features/` — feature definitions & transformations; `model/` — trained XGBoost/scikit-
-  learn artifact and training code; `service/` — thin inference API.
-- Input contract carries per-source coverage flags so sparse consents can be scored with a
-  confidence penalty instead of failing outright.
+- Separate process; receives **in-memory source payloads** over the internal API (they
+  transit but are never persisted), returns `BRI ∈ [0, 100]` + model version + features +
+  per-source attributions (explainability is an HLD design principle).
+- `features/` — feature extraction & transformations; `model/` — BRI logic (heuristic v1
+  behind a stable `score(features, coverage)` interface; the trained XGBoost model drops
+  in here); `service/` — thin inference API (`POST /score`).
+- Coverage is derived from which payloads are present, so sparse consents still score
+  (remaining source weights renormalize) instead of failing outright.
 - Scoring is stateless w.r.t. the borrower: no feature store of borrower data.
 
 ## 7. Security & compliance (HLD §5)
@@ -160,9 +164,9 @@ it does not belong in Postgres.
 
 ## 8. Deployment topology (`infra/`)
 
-Proposed for the hackathon: single-host `docker-compose` with `backend`, `scoring`,
-`frontend` (static), `postgres`, `redis`. Scale-out path (post-hackathon): orchestrator
-and scoring as separate services — they already have a process boundary by design.
+Implemented for the hackathon: single-host `docker compose` with `backend`, `scoring`,
+`frontend` (nginx static), `postgres`, `redis` — see `infra/docker-compose.yml`. Scale-out
+path (post-hackathon): orchestrator and scoring are already separate processes.
 
 Non-functional notes from the HLD: PWA must stay light for 3G/4G; every DPI fan-out is
 latency-sensitive (parallel by design); voice UX must degrade gracefully to text in the

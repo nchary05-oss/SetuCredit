@@ -1,0 +1,72 @@
+# Local dev + demo stack.
+#   Dev only:    docker compose -f infra/docker-compose.yml up -d postgres redis
+#   Full stack:  docker compose -f infra/docker-compose.yml --profile app up --build
+name: setucredit
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: setucredit
+      POSTGRES_PASSWORD: setucredit
+      POSTGRES_DB: setucredit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U setucredit"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  scoring:
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: infra/docker/scoring.Dockerfile
+    ports:
+      - "8001:8001"
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: infra/docker/backend.Dockerfile
+    environment:
+      ENV: dev
+      DATABASE_URL: postgresql+asyncpg://setucredit:setucredit@postgres:5432/setucredit
+      REDIS_URL: redis://redis:6379/0
+      SCORING_SERVICE_URL: http://scoring:8001
+      WEBHOOK_SECRET: dev-webhook-secret
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      scoring:
+        condition: service_started
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ../frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

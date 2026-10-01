@@ -1,0 +1,38 @@
+[project]
+name = "setucredit"
+version = "0.1.0"
+description = "SetuCredit middleware orchestration layer"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+workspace = { members = ["backend", "scoring"] }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/migrations/**" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests", "scoring/tests"]
+asyncio_mode = "auto"
+# One event loop for the whole session: shared async engine/redis clients
+# keep pooled connections bound to a single loop across tests.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "integration: requires running Postgres + Redis (see AGENTS.md)",
+]

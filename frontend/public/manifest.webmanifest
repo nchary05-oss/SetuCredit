@@ -1,0 +1,9 @@
+{
+  "name": "SetuCredit",
+  "short_name": "SetuCredit",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Voice-first credit onboarding for micro-borrowers"
+}
