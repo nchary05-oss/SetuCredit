@@ -4,12 +4,12 @@ import asyncio
 
 from app.config import get_settings
 from app.dpi.base import SourceResult
-from app.dpi.stubs import ALL_ADAPTERS
+from app.dpi.registry import get_adapters
 
 
 async def run_pull(session_id: str, scope: list[str]) -> dict[str, SourceResult]:
     settings = get_settings()
-    adapters = [a for a in ALL_ADAPTERS if a.source_id in scope]
+    adapters = [a for a in get_adapters() if a.source_id in scope]
 
     async def one(adapter) -> SourceResult:
         try:
