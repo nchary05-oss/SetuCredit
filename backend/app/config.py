@@ -22,6 +22,26 @@ class Settings(BaseSettings):
     consent_ttl_seconds: int = 900
     dpi_timeout_seconds: float = 5.0
 
+    # RBI ULI gateway. "stub" (default) uses deterministic in-process
+    # adapters; "live" + credentials routes "uli" via UliApiAdapter
+    # (see app/dpi/registry.py). Non-prod gateway/token defaults below.
+    uli_mode: str = "stub"
+    uli_base_url: str = "https://extgw.nonprod.rbihub.io"
+    uli_token_url: str = "https://auth.nonprod.rbihub.io/oauth/token"
+    uli_client_id: str | None = None
+    uli_client_secret: str | None = None
+    uli_mtls_cert: str | None = None
+    uli_mtls_key: str | None = None
+
+    # OTP delivery. "stub" (default) is a no-op sender; "sms" + credentials
+    # routes sends via SmsOtpProvider (see app/otp/provider.py).
+    otp_mode: str = "stub"
+    otp_max_attempts: int = 5
+    sms_base_url: str | None = None
+    sms_api_key: str | None = None
+    sms_sender_id: str | None = None
+    sms_template_id: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:

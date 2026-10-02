@@ -10,6 +10,7 @@ from app import session as sess
 from app.audit import service as audit
 from app.config import get_settings
 from app.db import get_db
+from app.otp import provider as otp_provider
 from app.redis_client import redis_client
 from app.schemas import (
     NEXT_ACTION,
@@ -67,6 +68,10 @@ async def otp(
         sess.require_state(data, "CREATED")
         code = f"{secrets.randbelow(10**6):06d}"
         await sess.store_otp(redis_client, session_id, code)
+        try:
+            await otp_provider.get_provider().send(session_id=session_id, code=code, mobile=None)
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail="otp send failed") from exc
         dev_otp = code if get_settings().env == "dev" else None
         return OtpResponse(sent=True, dev_otp=dev_otp)
 

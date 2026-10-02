@@ -1,5 +1,7 @@
 """Session + OTP state lives in Redis with TTLs — never in Postgres."""
 
+import hashlib
+import hmac
 import json
 import uuid
 
@@ -18,6 +20,14 @@ def _session_key(session_id: str) -> str:
 
 def _otp_key(session_id: str) -> str:
     return f"otp:{session_id}"
+
+
+def _otp_attempts_key(session_id: str) -> str:
+    return f"otp_attempts:{session_id}"
+
+
+def _otp_hash(session_id: str, code: str) -> str:
+    return hashlib.sha256(f"{session_id}:{code}".encode()).hexdigest()
 
 
 async def create_session(r: aioredis.Redis, language: str) -> dict:
@@ -70,13 +80,23 @@ def require_state(data: dict, *allowed: str) -> None:
 
 
 async def store_otp(r: aioredis.Redis, session_id: str, code: str) -> None:
+    """Store only the OTP hash (never plaintext); reset the attempts counter."""
     settings = get_settings()
-    await r.set(_otp_key(session_id), code, ex=settings.otp_ttl_seconds)
+    await r.set(_otp_key(session_id), _otp_hash(session_id, code), ex=settings.otp_ttl_seconds)
+    await r.set(_otp_attempts_key(session_id), 0, ex=settings.otp_ttl_seconds)
 
 
 async def verify_otp(r: aioredis.Redis, session_id: str, code: str) -> bool:
+    settings = get_settings()
+    attempts = await r.get(_otp_attempts_key(session_id))
+    if attempts is not None and int(attempts) >= settings.otp_max_attempts:
+        return False
     stored = await r.get(_otp_key(session_id))
-    if stored is None or stored != code:
+    if stored is None:
+        return False
+    if not hmac.compare_digest(stored, _otp_hash(session_id, code)):
+        await r.incr(_otp_attempts_key(session_id))
         return False
     await r.delete(_otp_key(session_id))
+    await r.delete(_otp_attempts_key(session_id))
     return True
