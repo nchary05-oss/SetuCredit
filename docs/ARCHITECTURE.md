@@ -7,6 +7,11 @@ Status: **implemented for the hackathon** — runnable code under `backend/`, `s
 `frontend/`, `infra/` (see `AGENTS.md` for exact commands). This document and the code
 should be kept in sync; where they diverge, the code is what runs.
 
+Visual reference: **`docs/ARCHITECTURE_DIAGRAMS.md`** — Mermaid diagrams for system
+context, deployment, backend components, the 6-stage sequence, session state machine,
+data model, scoring pipeline, pass-through trust boundary, and API surface. Update it
+alongside this document.
+
 ---
 
 ## 1. System context
