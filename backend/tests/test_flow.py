@@ -58,6 +58,16 @@ async def test_full_flow(client):
     assert all(s["status"] == "ok" for s in result["sources"].values())
     appraisal_id = result["appraisal_id"]
 
+    # full analysis report payload
+    assert set(result["sources"]) <= set(result["attributions"]) <= {"land", "discom", "aa", "uli"}
+    assert abs(sum(result["attributions"].values()) - result["bri"]) <= 1.5
+    assert abs(sum(result["max_points"].values()) - 100) <= 0.5
+    assert "land_area_acres" in result["features"]
+    if result["bri"] >= 40:
+        assert result["loan_range"]["min_inr"] <= result["loan_range"]["max_inr"]
+    else:
+        assert result["loan_range"] is None
+
     r = await client.get(f"/v1/appraisals/{appraisal_id}")
     assert r.status_code == 200
     view = r.json()

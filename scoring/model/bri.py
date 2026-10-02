@@ -9,6 +9,24 @@ MODEL_VERSION = "bri-heuristic-0.1.0"
 
 WEIGHTS = {"land": 0.25, "discom": 0.25, "aa": 0.30, "uli": 0.20}
 
+LOAN_BANDS = (
+    (80, (100_000, 500_000)),
+    (60, (50_000, 200_000)),
+    (40, (25_000, 75_000)),
+)
+
+
+def suggest_loan(bri: int) -> dict[str, int] | None:
+    """Indicative loan amount band for the partner lender (None = below floor).
+
+    Band-based v1: a transparent BRI -> rupees mapping, not an underwriting
+    decision. The lender sets the final amount.
+    """
+    for floor, (low, high) in LOAN_BANDS:
+        if bri >= floor:
+            return {"min_inr": low, "max_inr": high}
+    return None
+
 
 def _clamp(value: float) -> float:
     return max(0.0, min(1.0, value))

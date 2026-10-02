@@ -1,5 +1,7 @@
 """Appraise: consent-gated parallel DPI pull -> scoring -> NBFC handoff."""
 
+import json
+
 import httpx
 from fastapi import APIRouter, HTTPException
 
@@ -78,7 +80,8 @@ async def appraise(session_id: str, db: DbDep):
         model_version=appraisal.model_version,
     )
 
-    handoff = await _hand_off(appraisal)
+    loan_range = score_result.get("loan_range")
+    handoff = await _hand_off(appraisal, loan_range)
     if handoff != "failed":
         appraisal.status = "handed_off"
         await sess.set_state(redis_client, data, "HANDED_OFF")
@@ -105,17 +108,26 @@ async def appraise(session_id: str, db: DbDep):
             for k, r in results.items()
         },
         handoff=handoff,
+        features=score_result["features"],
+        attributions=score_result["attributions"],
+        max_points=score_result["max_points"],
+        loan_range=loan_range,
     )
 
 
-async def _hand_off(appraisal: Appraisal) -> str:
+async def _hand_off(appraisal: Appraisal, loan_range: dict | None) -> str:
     """Send pre-underwritten package to partner NBFC; simulate if unconfigured."""
     settings = get_settings()
     if not settings.partner_webhook_url:
         return "simulated"
-    body = (
-        f'{{"appraisal_id":"{appraisal.id}","session_id":"{appraisal.session_id}",'
-        f'"bri":{appraisal.bri},"model_version":"{appraisal.model_version}"}}'
+    body = json.dumps(
+        {
+            "appraisal_id": appraisal.id,
+            "session_id": appraisal.session_id,
+            "bri": appraisal.bri,
+            "model_version": appraisal.model_version,
+            "loan_range": loan_range,
+        }
     ).encode()
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:

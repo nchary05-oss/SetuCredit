@@ -82,6 +82,10 @@ class AppraiseResponse(BaseModel):
     model_version: str
     sources: dict[str, SourceStatus]
     handoff: Literal["sent", "simulated", "failed"]
+    features: dict[str, float]
+    attributions: dict[str, float]
+    max_points: dict[str, float]
+    loan_range: dict[str, int] | None = None
 
 
 class AppraisalView(BaseModel):

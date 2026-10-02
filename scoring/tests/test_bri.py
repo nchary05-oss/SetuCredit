@@ -1,5 +1,5 @@
 from features.extract import extract
-from model.bri import MODEL_VERSION, WEIGHTS, score
+from model.bri import MODEL_VERSION, WEIGHTS, score, suggest_loan
 
 
 def _full_payloads() -> dict[str, dict]:
@@ -50,3 +50,12 @@ def test_missing_feature_keys_do_not_crash():
 
 def test_model_version_exported():
     assert MODEL_VERSION.startswith("bri-")
+
+
+def test_suggest_loan_bands():
+    assert suggest_loan(85) == {"min_inr": 100_000, "max_inr": 500_000}
+    assert suggest_loan(80) == {"min_inr": 100_000, "max_inr": 500_000}
+    assert suggest_loan(60) == {"min_inr": 50_000, "max_inr": 200_000}
+    assert suggest_loan(40) == {"min_inr": 25_000, "max_inr": 75_000}
+    assert suggest_loan(39) is None
+    assert suggest_loan(0) is None
