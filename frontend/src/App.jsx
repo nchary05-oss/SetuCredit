@@ -3,6 +3,7 @@ import * as api from "./api.js";
 const ResultReport = lazy(() => import("./components/ResultReport.jsx"));
 import { BridgeMark, HeroArt, Icon } from "./components/Illustrations.jsx";
 import { speak } from "./voice/tts.js";
+import { getStrings, speakText } from "./i18n.js";
 
 const LANGUAGES = [
   { code: "hi-IN", label: "हिन्दी (Hindi)" },
@@ -13,75 +14,36 @@ const LANGUAGES = [
   { code: "en-IN", label: "English" },
 ];
 
-const SCOPE_OPTIONS = [
-  { id: "land", label: "Land registry records" },
-  { id: "discom", label: "Electricity bill payments" },
-  { id: "aa", label: "Bank account summary" },
-  { id: "uli", label: "Lending history (RBI ULI)" },
-];
+const SCOPE_IDS = ["land", "discom", "aa", "uli"];
 
-const HOW_IT_WORKS = [
-  {
-    icon: "mic",
-    title: "Speak or type in your language",
-    text: "Six Indian languages, guided one step at a time.",
-  },
-  {
-    icon: "shield",
-    title: "Verify once with an OTP",
-    text: "Sent to your Aadhaar-linked number and checked in seconds.",
-  },
-  {
-    icon: "doc",
-    title: "Consent, then and only then",
-    text: "Tick exactly what you share. Consent expires on its own.",
-  },
-  {
-    icon: "gauge",
-    title: "Get your Borrower Readiness Index",
-    text: "Passed straight to a partner lender — funds arrive by UPI/IMPS.",
-  },
-];
+const SCOPE_LABEL_KEY = { land: "scopeLand", discom: "scopeDiscom", aa: "scopeAa", uli: "scopeUli" };
 
-const STEP_GUIDE = {
-  otp: {
-    icon: "shield",
-    title: "Why we verify",
-    points: [
-      "The OTP goes only to your Aadhaar-linked number.",
-      "It proves the session is yours — nothing else is collected.",
-      "Wrong number? Go back and start a fresh session.",
-    ],
-  },
-  consent: {
-    icon: "doc",
-    title: "You hold the pen",
-    points: [
-      "Tick only the records you are comfortable sharing.",
-      "Consent is time-bound and revocable under DPDP.",
-      "Every pull is logged in the audit ledger — no record contents.",
-    ],
-  },
-  appraise: {
-    icon: "scan",
-    title: "Four sources, one pass",
-    points: [
-      "Land, electricity, bank and lending records are pulled in parallel.",
-      "Features are computed in memory and never written to disk.",
-      "Your score is handed to the partner lender as a signed package.",
-    ],
-  },
-};
+function howItems(t) {
+  return [
+    { icon: "mic", title: t.how1t, text: t.how1x },
+    { icon: "shield", title: t.how2t, text: t.how2x },
+    { icon: "doc", title: t.how3t, text: t.how3x },
+    { icon: "gauge", title: t.how4t, text: t.how4x },
+  ];
+}
+
+function guideFor(step, t) {
+  if (step === "otp")
+    return { icon: "shield", title: t.gOtpT, points: [t.gOtp1, t.gOtp2, t.gOtp3] };
+  if (step === "consent")
+    return { icon: "doc", title: t.gConT, points: [t.gCon1, t.gCon2, t.gCon3] };
+  return { icon: "scan", title: t.gAppT, points: [t.gApp1, t.gApp2, t.gApp3] };
+}
 
 const STEPS = ["start", "otp", "consent", "appraise", "result"];
 
-function StepPanel({ icon, title, points }) {
+function StepPanel({ icon, title, points, eyebrow, note }) {
   return (
     <aside className="panel" aria-label={`About this step: ${title}`}>
       <span className="panel-icon" aria-hidden="true">
         <Icon name={icon} size={26} />
       </span>
-      <p className="eyebrow">Good to know</p>
+      <p className="eyebrow">{eyebrow}</p>
       <h2 className="panel-title">{title}</h2>
       <ul className="panel-list">
         {points.map((point) => (
@@ -93,7 +55,7 @@ function StepPanel({ icon, title, points }) {
       </ul>
       <p className="panel-note">
         <Icon name="lock" size={15} />
-        Pass-through by design — record contents are never stored.
+        {note}
       </p>
     </aside>
   );
@@ -116,11 +78,13 @@ export default function App() {
   const [step, setStep] = useState("start");
   const [otp, setOtp] = useState("");
   const [devOtp, setDevOtp] = useState(null);
-  const [scope, setScope] = useState(SCOPE_OPTIONS.map((o) => o.id));
+  const [scope, setScope] = useState(SCOPE_IDS);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const firstRender = useRef(true);
+  const t = getStrings(language);
+  const scopeOptions = SCOPE_IDS.map((id) => ({ id, label: t[SCOPE_LABEL_KEY[id]] }));
 
   const fail = (err) => setError(err.message || String(err));
 
@@ -131,7 +95,7 @@ export default function App() {
       const s = await api.createSession(language);
       setSession(s);
       setStep("otp");
-      speak("Please verify your identity with a one time password", language);
+      speak(t.speakVerify, language);
       const sent = await api.sendOtp(s.session_id);
       setDevOtp(sent.dev_otp);
     } catch (err) {
@@ -148,7 +112,7 @@ export default function App() {
     try {
       await api.verifyOtp(session.session_id, otp);
       setStep("consent");
-      speak("Identity verified. Please grant consent to read your records", language);
+      speak(t.speakVerified, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -162,7 +126,7 @@ export default function App() {
     try {
       await api.grantConsent(session.session_id, scope);
       setStep("appraise");
-      speak("Consent granted. Continue to check your credit readiness", language);
+      speak(t.speakGranted, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -177,7 +141,7 @@ export default function App() {
       const r = await api.appraise(session.session_id);
       setResult(r);
       setStep("result");
-      speak(`Your Borrower Readiness Index is ${r.bri} out of 100`, language);
+      speak(speakText(t.speakResult, { bri: r.bri }), language);
     } catch (err) {
       fail(err);
     } finally {
@@ -215,12 +179,12 @@ export default function App() {
           </div>
           {step === "start" ? (
             <nav className="topnav" aria-label="Primary">
-              <a href="#how-it-works">How it works</a>
-              <a href="#trust">Trust</a>
+              <a href="#how-it-works">{t.navHow}</a>
+              <a href="#trust">{t.navTrust}</a>
             </nav>
           ) : (
             <button type="button" className="link-btn" onClick={restart}>
-              Start over
+              {t.startOver}
             </button>
           )}
         </div>
@@ -228,7 +192,7 @@ export default function App() {
 
       <div className="shell">
         <ol className="progress" aria-label="Onboarding progress">
-          {["Language", "OTP", "Consent", "Appraise", "Result"].map((label, i) => (
+          {t.progress.map((label, i) => (
             <li
               key={label}
               className={i <= stepIndex ? "on" : ""}
@@ -251,25 +215,22 @@ export default function App() {
             <>
               <section className="hero" aria-labelledby="hero-title">
                 <div className="hero-copy">
-                  <p className="eyebrow">Voice-first · DPI-powered</p>
+                  <p className="eyebrow">{t.heroEyebrow}</p>
                   <h2 className="hero-title" id="hero-title">
-                    Your records are already a credit history.
+                    {t.heroTitle}
                   </h2>
                   <p className="hero-lede">
-                    Land ownership, electricity bills and bank activity say more about a borrower
-                    than a bureau file ever could. SetuCredit turns them into a Borrower Readiness
-                    Index a partner lender can act on — with your consent, in your language, in
-                    minutes.
+                    {t.heroLede}
                   </p>
                   <ul className="trust-chips" id="trust">
                     <li>
-                      <Icon name="lock" size={14} /> Consent first
+                      <Icon name="lock" size={14} /> {t.chipConsent}
                     </li>
                     <li>
-                      <Icon name="shield" size={14} /> Data never stored
+                      <Icon name="shield" size={14} /> {t.chipStored}
                     </li>
                     <li>
-                      <Icon name="globe" size={14} /> 6 languages
+                      <Icon name="globe" size={14} /> {t.chipLang}
                     </li>
                   </ul>
                 </div>
@@ -283,8 +244,8 @@ export default function App() {
                   tabIndex={-1}
                   aria-labelledby="heading-start"
                 >
-                  <h2 id="heading-start">Get started</h2>
-                  <label htmlFor="lang">Choose your language</label>
+                  <h2 id="heading-start">{t.getStarted}</h2>
+                  <label htmlFor="lang">{t.chooseLang}</label>
                   <select id="lang" value={language} onChange={(e) => setLanguage(e.target.value)}>
                     {LANGUAGES.map((l) => (
                       <option key={l.code} value={l.code}>
@@ -293,18 +254,18 @@ export default function App() {
                     ))}
                   </select>
                   <button disabled={busy} onClick={start}>
-                    <BusyLabel busy={busy} idle="Start onboarding" active="Starting…" />
+                    <BusyLabel busy={busy} idle={t.startBtn} active={t.startingBtn} />
                   </button>
                   <p className="hint">
-                    Takes about two minutes. Keep your Aadhaar-linked phone handy.
+                    {t.startHint}
                   </p>
                 </section>
 
                 <aside className="panel" id="how-it-works" aria-label="How it works">
-                  <p className="eyebrow">How it works</p>
-                  <h2 className="panel-title">Four steps, one bridge to a lender</h2>
+                  <p className="eyebrow">{t.howEyebrow}</p>
+                  <h2 className="panel-title">{t.howTitle}</h2>
                   <ol className="how-list">
-                    {HOW_IT_WORKS.map((item) => (
+                    {howItems(t).map((item) => (
                       <li key={item.title}>
                         <span className="how-icon" aria-hidden="true">
                           <Icon name={item.icon} size={20} />
@@ -318,7 +279,7 @@ export default function App() {
                   </ol>
                   <p className="panel-note">
                     <Icon name="lock" size={15} />
-                    Pass-through by design — borrower records are never written to our database.
+                    {t.passNote}
                   </p>
                 </aside>
               </div>
@@ -333,13 +294,13 @@ export default function App() {
                 tabIndex={-1}
                 aria-labelledby="heading-otp"
               >
-                <h2 id="heading-otp">Verify your number</h2>
+                <h2 id="heading-otp">{t.otpTitle}</h2>
                 <label htmlFor="otp">
-                  Enter the 6-digit OTP sent to your Aadhaar-linked number.
+                  {t.otpLabel}
                 </label>
                 {devOtp && (
                   <p className="hint" id="otp-hint">
-                    Dev mode OTP: <strong>{devOtp}</strong>
+                    {t.devOtp} <strong>{devOtp}</strong>
                   </p>
                 )}
                 <input
@@ -354,10 +315,10 @@ export default function App() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 />
                 <button disabled={busy || otp.length !== 6} onClick={verify}>
-                  <BusyLabel busy={busy} idle="Verify OTP" active="Verifying…" />
+                  <BusyLabel busy={busy} idle={t.verifyBtn} active={t.verifyingBtn} />
                 </button>
               </section>
-              <StepPanel {...STEP_GUIDE.otp} />
+              <StepPanel {...guideFor("otp", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}
 
@@ -369,12 +330,11 @@ export default function App() {
                 tabIndex={-1}
                 aria-labelledby="heading-consent"
               >
-                <h2 id="heading-consent">Grant consent</h2>
+                <h2 id="heading-consent">{t.consentTitle}</h2>
                 <p>
-                  SetuCredit reads these records <strong>once, only with your consent</strong>.
-                  Nothing is stored on our servers.
+                  {t.consentDesc}
                 </p>
-                {SCOPE_OPTIONS.map((o) => (
+                {scopeOptions.map((o) => (
                   <label key={o.id} className="check">
                     <input
                       type="checkbox"
@@ -389,10 +349,10 @@ export default function App() {
                   </label>
                 ))}
                 <button disabled={busy || scope.length === 0} onClick={grant}>
-                  <BusyLabel busy={busy} idle="Grant consent" active="Granting…" />
+                  <BusyLabel busy={busy} idle={t.grantBtn} active={t.grantingBtn} />
                 </button>
               </section>
-              <StepPanel {...STEP_GUIDE.consent} />
+              <StepPanel {...guideFor("consent", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}
 
@@ -404,10 +364,10 @@ export default function App() {
                 tabIndex={-1}
                 aria-labelledby="heading-appraise"
               >
-                <h2 id="heading-appraise">Check readiness</h2>
-                <p>We will pull your records in parallel and compute your BRI score.</p>
+                <h2 id="heading-appraise">{t.appraiseTitle}</h2>
+                <p>{t.appraiseDesc}</p>
                 <div className="scope-review">
-                  {SCOPE_OPTIONS.filter((o) => scope.includes(o.id)).map((o) => (
+                  {scopeOptions.filter((o) => scope.includes(o.id)).map((o) => (
                     <span key={o.id} className="scope-chip">
                       <Icon name="check" size={14} />
                       {o.label}
@@ -415,10 +375,10 @@ export default function App() {
                   ))}
                 </div>
                 <button disabled={busy} onClick={runAppraise}>
-                  <BusyLabel busy={busy} idle="Check my readiness" active="Pulling data…" />
+                  <BusyLabel busy={busy} idle={t.checkBtn} active={t.pullingBtn} />
                 </button>
               </section>
-              <StepPanel {...STEP_GUIDE.appraise} />
+              <StepPanel {...guideFor("appraise", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}
 
@@ -429,7 +389,7 @@ export default function App() {
               tabIndex={-1}
               aria-label={`Your result: Borrower Readiness Index ${result.bri} out of 100`}
             >
-              <Suspense fallback={<p className="hint">Loading report…</p>}>
+              <Suspense fallback={<p className="hint">{t.loadingReport}</p>}>
                 <ResultReport result={result} onRestart={restart} />
               </Suspense>
             </section>
@@ -442,8 +402,8 @@ export default function App() {
               <BridgeMark size={24} />
               <span>SetuCredit</span>
             </div>
-            <p className="footer-tag">The middleware bridge between consented data and lenders.</p>
-            <p className="footer-note">Consent first · Pass-through by default · Data never stored</p>
+            <p className="footer-tag">{t.footerTag}</p>
+            <p className="footer-note">{t.footerNote}</p>
           </div>
         </footer>
       </div>
