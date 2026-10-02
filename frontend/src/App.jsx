@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import * as api from "./api.js";
-import ResultReport from "./components/ResultReport.jsx";
+const ResultReport = lazy(() => import("./components/ResultReport.jsx"));
 import { BridgeMark, HeroArt, Icon } from "./components/Illustrations.jsx";
 import { speak } from "./voice/tts.js";
 
@@ -429,7 +429,9 @@ export default function App() {
               tabIndex={-1}
               aria-label={`Your result: Borrower Readiness Index ${result.bri} out of 100`}
             >
-              <ResultReport result={result} onRestart={restart} />
+              <Suspense fallback={<p className="hint">Loading report…</p>}>
+                <ResultReport result={result} onRestart={restart} />
+              </Suspense>
             </section>
           )}
         </main>
