@@ -363,6 +363,51 @@ section:focus {
   margin: 0;
 }
 
+.aadhaar-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid #38bdf8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.aadhaar-note strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.aadhaar-note p {
+  margin: 0;
+}
+
+.otp-help {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid #fbbf24;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.otp-help strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.otp-help ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
 .error {
   background: #7f1d1d;
   border: 1px solid #b91c1c;

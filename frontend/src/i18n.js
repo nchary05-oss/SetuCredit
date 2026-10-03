@@ -47,6 +47,16 @@ const enIN = {
   gApp3: "Your score is handed to the partner lender as a signed package.",
   otpTitle: "Verify your number",
   otpLabel: "Enter the 6-digit OTP sent to your Aadhaar-linked number.",
+  aadhaarTitle: "Aadhaar verification",
+  aadhaarBody:
+    "We verify the mobile number linked to your Aadhaar with an OTP. We will never ask for your 12-digit Aadhaar number, and it is never stored. DigiLocker document verification is also accepted where the lender offers it.",
+  otpHelpTitle: "Not getting the OTP?",
+  otpHelp1:
+    "The code goes to the mobile number registered with your Aadhaar — make sure that SIM is in your phone.",
+  otpHelp2:
+    "Forgot which number is linked? Check on the mAadhaar app or the UIDAI portal's Verify Mobile service.",
+  otpHelp3:
+    "Changed number or never linked? Visit an Aadhaar Seva Kendra with ID proof to register it — linking needs an in-person biometric.",
   devOtp: "Dev mode OTP:",
   verifyBtn: "Verify OTP",
   verifyingBtn: "Verifying…",
@@ -115,6 +125,16 @@ const hiIN = {
   gApp3: "आपका स्कोर हस्ताक्षरित पैकेज के रूप में ऋणदाता को दिया जाता है।",
   otpTitle: "अपना नंबर सत्यापित करें",
   otpLabel: "आधार-लिंक्ड नंबर पर भेजा 6-अंकीय ओटीपी दर्ज करें।",
+  aadhaarTitle: "आधार सत्यापन",
+  aadhaarBody:
+    "हम आपके आधार से लिंक्ड मोबाइल को OTP से सत्यापित करते हैं। हम आपका 12-अंकीय आधार नंबर कभी नहीं मांगते और कभी संग्रहीत नहीं करते। जहां ऋणदाता देता है, वहां DigiLocker दस्तावेज़ सत्यापन भी स्वीकार्य है।",
+  otpHelpTitle: "OTP नहीं मिल रहा?",
+  otpHelp1:
+    "कोड आपके आधार से जुड़े मोबाइल नंबर पर जाता है — वही SIM फोन में होनी चाहिए।",
+  otpHelp2:
+    "कौन-सा नंबर जुड़ा है भूल गए? mAadhaar ऐप या UIDAI पोर्टल की Verify Mobile सेवा पर जांचें।",
+  otpHelp3:
+    "नंबर बदला या कभी लिंक नहीं हुआ? ID प्रमाण के साथ आधार सेवा केंद्र जाएं — लिंकिंग के लिए बायोमेट्रिक जरूरी है।",
   devOtp: "Dev मोड OTP:",
   verifyBtn: "OTP सत्यापित करें",
   verifyingBtn: "सत्यापित हो रहा है…",
@@ -183,6 +203,16 @@ const teIN = {
   gApp3: "మీ స్కోరు సంతకం చేసిన ప్యాకేజీగా రుణదాతకు అందుతుంది.",
   otpTitle: "మీ నంబర్‌ను ధృవీకరించండి",
   otpLabel: "మీ ఆధార్-లింక్డ్ నంబర్‌కు పంపిన 6-అంకెల ఓటీపీని నమోదు చేయండి.",
+  aadhaarTitle: "ఆధార్ ధృవీకరణ",
+  aadhaarBody:
+    "మీ ఆధార్‌తో లింకైన మొబైల్ నంబర్‌ను OTPతో ధృవీకరిస్తాం. మీ 12-అంకెల ఆధార్ నంబర్‌ను ఎప్పుడూ అడగం, నిల్వ చేయం. రుణదాత అందించే చోట DigiLocker పత్ర ధృవీకరణ కూడా ఆమోదయోగ్యం.",
+  otpHelpTitle: "OTP రావడం లేదా?",
+  otpHelp1:
+    "కోడ్ మీ ఆధార్‌తో నమోదైన మొబైల్ నంబర్‌కు వెళ్తుంది — ఆ SIM మీ ఫోన్‌లోనే ఉందో చూడండి.",
+  otpHelp2:
+    "ఏ నంబర్ లింకైందో మర్చారా? mAadhaar యాప్‌లో లేదా UIDAI పోర్టల్ Verify Mobile సేవలో తనిఖీ చేయండి.",
+  otpHelp3:
+    "నంబర్ మారిందా లేదా ఎప్పుడూ లింక్ చేయలేదా? ID రుజువుతో ఆధార్ సేవా కేంద్రానికి వెళ్లండి — లింకింగ్‌కు బయోమెట్రిక్ తప్పనిసరి.",
   devOtp: "Dev మోడ్ OTP:",
   verifyBtn: "OTP ధృవీకరించండి",
   verifyingBtn: "ధృవీకరిస్తోంది…",
@@ -251,6 +281,16 @@ const bnIN = {
   gApp3: "আপনার স্কোর স্বাক্ষরিত প্যাকেজ হিসেবে ঋণদাতাকে দেওয়া হয়।",
   otpTitle: "আপনার নম্বর যাচাই করুন",
   otpLabel: "আধার-লিঙ্কড নম্বরে পাঠানো ৬-সংখ্যার ওটিপি দিন।",
+  aadhaarTitle: "আধার যাচাইকরণ",
+  aadhaarBody:
+    "আমরা আপনার আধারের সঙ্গে যুক্ত মোবাইল নম্বর OTP দিয়ে যাচাই করি। আপনার 12-সংখ্যার আধার নম্বর কখনও চাওয়া বা সংরক্ষণ করা হয় না। ঋণদাতা দিলে DigiLocker নথি যাচাইও গ্রহণযোগ্য।",
+  otpHelpTitle: "OTP পাচ্ছেন না?",
+  otpHelp1:
+    "কোড আপনার আধারের সঙ্গে নথিভুক্ত মোবাইল নম্বরে যায় — সেই SIM ফোনে আছে কিনা দেখুন।",
+  otpHelp2:
+    "কোন নম্বর যুক্ত ভুলে গেছেন? mAadhaar অ্যাপ বা UIDAI পোর্টালের Verify Mobile সেবায় দেখুন।",
+  otpHelp3:
+    "নম্বর বদলেছে বা কখনও যুক্ত হয়নি? ID প্রমাণ নিয়ে আধার সেবা কেন্দ্রে যান — লিঙ্ক করতে সশরীরে বায়োমেট্রিক লাগে।",
   devOtp: "Dev মোড OTP:",
   verifyBtn: "OTP যাচাই করুন",
   verifyingBtn: "যাচাই হচ্ছে…",
@@ -319,6 +359,16 @@ const taIN = {
   gApp3: "உங்கள் மதிப்பெண் கையொப்பமிட்ட தொகுப்பாக வழங்கப்படும்.",
   otpTitle: "உங்கள் எண்ணை சரிபார்க்கவும்",
   otpLabel: "ஆதார் இணைந்த எண்ணுக்கு அனுப்பிய 6 இலக்க OTP-ஐ உள்ளிடுக.",
+  aadhaarTitle: "ஆதார் சரிபார்ப்பு",
+  aadhaarBody:
+    "உங்கள் ஆதாருடன் இணைந்த மொபைல் எண்ணை OTP மூலம் சரிபார்க்கிறோம். உங்கள் 12 இலக்க ஆதார் எண்ணை ஒருபோதும் கேட்கவோ சேமிக்கவோ மாட்டோம். கடன் வழங்குநர் வழங்குமிடத்தில் DigiLocker ஆவண சரிபார்ப்பும் ஏற்கப்படும்.",
+  otpHelpTitle: "OTP வரவில்லையா?",
+  otpHelp1:
+    "குறியீடு உங்கள் ஆதாருடன் பதிவான மொபைல் எண்ணுக்குச் செல்லும் — அந்த SIM உங்கள் போனில் உள்ளதா எனப் பாருங்கள்.",
+  otpHelp2:
+    "எந்த எண் இணைந்தது என மறந்துவிட்டதா? mAadhaar செயலி அல்லது UIDAI இணைய Verify Mobile சேவையில் பாருங்கள்.",
+  otpHelp3:
+    "எண் மாறிவிட்டதா அல்லது இணைக்கப்படவில்லையா? அடையாளச் சான்றுடன் ஆதார் சேவா மையம் செல்லுங்கள் — இணைக்க நேரடி பயோமெட்ரிக் தேவை.",
   devOtp: "Dev முறை OTP:",
   verifyBtn: "OTP சரிபார்",
   verifyingBtn: "சரிபார்க்கிறது…",
@@ -387,6 +437,16 @@ const mrIN = {
   gApp3: "तुमचा स्कोअर स्वाक्षरीत पॅकेज म्हणून सावकाराला दिला जातो.",
   otpTitle: "तुमचा नंबर सत्यापित करा",
   otpLabel: "आधार-लिंक्ड नंबरवर पाठवलेला 6-अंकी OTP टाका.",
+  aadhaarTitle: "आधार पडताळणी",
+  aadhaarBody:
+    "आम्ही तुमच्या आधारशी लिंक्ड मोबाईलची OTP ने पडताळणी करतो. तुमचा 12-अंकी आधार नंबर आम्ही कधीही मागत नाही आणि साठवत नाही. सावकार देत असेल तिथे DigiLocker कागदपत्र पडताळणीही स्वीकारार्ह आहे.",
+  otpHelpTitle: "OTP येत नाहीये?",
+  otpHelp1:
+    "कोड तुमच्या आधारशी नोंदवलेल्या मोबाईल नंबरवर जातो — तेच SIM फोनमध्ये आहे का ते पहा.",
+  otpHelp2:
+    "कोणता नंबर जोडला आहे विसरलात? mAadhaar अॅप किंवा UIDAI पोर्टलच्या Verify Mobile सेवेवर तपासा.",
+  otpHelp3:
+    "नंबर बदलला की कधीच लिंक केला नाही? ID पुराव्यासह आधार सेवा केंद्रात जा — लिंकिंगसाठी प्रत्यक्ष बायोमेट्रिक लागते.",
   devOtp: "Dev मोड OTP:",
   verifyBtn: "OTP सत्यापित करा",
   verifyingBtn: "सत्यापित होत आहे…",

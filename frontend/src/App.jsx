@@ -295,6 +295,18 @@ export default function App() {
                 aria-labelledby="heading-otp"
               >
                 <h2 id="heading-otp">{t.otpTitle}</h2>
+                <div className="aadhaar-note" role="note">
+                  <strong>{t.aadhaarTitle}</strong>
+                  <p>{t.aadhaarBody}</p>
+                </div>
+                <div className="otp-help" role="note" aria-label={t.otpHelpTitle}>
+                  <strong>{t.otpHelpTitle}</strong>
+                  <ul>
+                    <li>{t.otpHelp1}</li>
+                    <li>{t.otpHelp2}</li>
+                    <li>{t.otpHelp3}</li>
+                  </ul>
+                </div>
                 <label htmlFor="otp">
                   {t.otpLabel}
                 </label>
