@@ -74,7 +74,7 @@ function BusyLabel({ busy, idle, active }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [language, setLanguage] = useState("hi-IN");
+  const [language, setLanguage] = useState("en-IN");
   const [step, setStep] = useState("start");
   const [otp, setOtp] = useState("");
   const [devOtp, setDevOtp] = useState(null);
@@ -82,6 +82,8 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [resendIn, setResendIn] = useState(0);
+  const [pullStatus, setPullStatus] = useState({});
   const firstRender = useRef(true);
   const errorRef = useRef(null);
   const t = getStrings(language);
@@ -121,6 +123,28 @@ export default function App() {
     }
   };
 
+  const resend = async () => {
+    if (resendIn > 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const sent = await api.sendOtp(session.session_id);
+      setDevOtp(sent.dev_otp);
+      setOtp("");
+      setResendIn(30);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
   const grant = async () => {
     setBusy(true);
     setError(null);
@@ -138,8 +162,15 @@ export default function App() {
   const runAppraise = async () => {
     setBusy(true);
     setError(null);
+    setPullStatus({});
     try {
       const r = await api.appraise(session.session_id);
+      for (const id of SCOPE_IDS.filter((s) => scope.includes(s))) {
+        await new Promise((res) => setTimeout(res, 300));
+        const status = r.sources?.[id]?.status ?? "failed";
+        setPullStatus((prev) => ({ ...prev, [id]: status }));
+      }
+      await new Promise((res) => setTimeout(res, 450));
       setResult(r);
       setStep("result");
       speak(speakText(t.speakResult, { bri: r.bri }), language);
@@ -157,6 +188,7 @@ export default function App() {
     setOtp("");
     setDevOtp(null);
     setError(null);
+    setPullStatus({});
   };
 
   useEffect(() => {
@@ -345,6 +377,18 @@ export default function App() {
                 <button type="submit" disabled={busy || otp.length !== 6}>
                   <BusyLabel busy={busy} idle={t.verifyBtn} active={t.verifyingBtn} />
                 </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy || resendIn > 0}
+                  onClick={resend}
+                >
+                  {resendIn > 0
+                    ? speakText(t.resendWait, { s: resendIn })
+                    : busy
+                      ? t.resendingBtn
+                      : t.resendBtn}
+                </button>
               </form>
               <StepPanel {...guideFor("otp", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
@@ -402,14 +446,45 @@ export default function App() {
               >
                 <h2 id="heading-appraise">{t.appraiseTitle}</h2>
                 <p>{t.appraiseDesc}</p>
-                <div className="scope-review">
-                  {scopeOptions.filter((o) => scope.includes(o.id)).map((o) => (
-                    <span key={o.id} className="scope-chip">
-                      <Icon name="check" size={14} />
-                      {o.label}
-                    </span>
-                  ))}
-                </div>
+                {busy ? (
+                  <ul className="pull-list" aria-live="polite" aria-label={t.appraiseTitle}>
+                    {scopeOptions
+                      .filter((o) => scope.includes(o.id))
+                      .map((o) => {
+                        const st = pullStatus[o.id];
+                        return (
+                          <li key={o.id} className={st ? `done ${st}` : "active"}>
+                            <span className="pull-icon" aria-hidden="true">
+                              {st === "ok" ? (
+                                <span className="pull-check-ok">✓</span>
+                              ) : st === "failed" ? (
+                                <span className="pull-check-fail">✕</span>
+                              ) : (
+                                <span className="spinner" />
+                              )}
+                            </span>
+                            <span className="pull-name">{o.label}</span>
+                            <span className="pull-state">
+                              {st === "ok"
+                                ? t.pullDone
+                                : st === "failed"
+                                  ? t.pullFailed
+                                  : t.pullReading}
+                            </span>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                ) : (
+                  <div className="scope-review">
+                    {scopeOptions.filter((o) => scope.includes(o.id)).map((o) => (
+                      <span key={o.id} className="scope-chip">
+                        <Icon name="check" size={14} />
+                        {o.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <button type="submit" disabled={busy}>
                   <BusyLabel busy={busy} idle={t.checkBtn} active={t.pullingBtn} />
                 </button>

@@ -70,6 +70,13 @@ function bandFor(bri) {
   };
 }
 
+const BRI_BANDS = [
+  { label: "Strong", min: 80, max: 100, color: "#34d399" },
+  { label: "Good", min: 60, max: 79, color: "#38bdf8" },
+  { label: "Fair", min: 40, max: 59, color: "#fbbf24" },
+  { label: "Building", min: 0, max: 39, color: "#f87171" },
+];
+
 function formatDateTime(d) {
   return d.toLocaleString(undefined, {
     dateStyle: "medium",
@@ -130,6 +137,25 @@ export default function ResultReport({ result, onRestart }) {
             </span>
             <span className="band-note">{band.note}</span>
           </div>
+          <ul className="bri-scale" aria-label="Borrower Readiness Index scale">
+            {BRI_BANDS.map((b) => {
+              const active = result.bri >= b.min && result.bri <= b.max;
+              return (
+                <li
+                  key={b.label}
+                  className={active ? "on" : ""}
+                  aria-current={active ? "true" : undefined}
+                >
+                  <span className="bri-dot" style={{ background: b.color }} aria-hidden="true" />
+                  <span className="bri-name">{b.label}</span>
+                  <span className="bri-range">
+                    {b.min}–{b.max}
+                  </span>
+                  {active && <span className="bri-you">your score</span>}
+                </li>
+              );
+            })}
+          </ul>
           <div className="loan-block">
             <p className="summary-eyebrow">Suggested loan amount</p>
             {result.loan_range ? (
