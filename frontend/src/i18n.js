@@ -6,6 +6,7 @@
 const enIN = {
   navHow: "How it works",
   navTrust: "Trust",
+  skipToContent: "Skip to main content",
   startOver: "Start over",
   progress: ["Language", "OTP", "Consent", "Appraise", "Result"],
   heroEyebrow: "Voice-first · DPI-powered",

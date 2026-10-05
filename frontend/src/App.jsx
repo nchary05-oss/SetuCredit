@@ -83,6 +83,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const firstRender = useRef(true);
+  const errorRef = useRef(null);
   const t = getStrings(language);
   const scopeOptions = SCOPE_IDS.map((id) => ({ id, label: t[SCOPE_LABEL_KEY[id]] }));
 
@@ -167,10 +168,17 @@ export default function App() {
     document.getElementById(`step-${step}`)?.focus();
   }, [step]);
 
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
+
   const stepIndex = STEPS.indexOf(step);
 
   return (
     <div>
+      <a className="skip-link" href="#main-content">
+        {t.skipToContent}
+      </a>
       <header className="topbar">
         <div className="topbar-inner">
           <div className="brand">
@@ -206,7 +214,7 @@ export default function App() {
 
         <main id="main-content">
           {error && (
-            <div className="error" role="alert">
+            <div className="error" role="alert" ref={errorRef} tabIndex={-1}>
               {error}
             </div>
           )}
@@ -238,11 +246,15 @@ export default function App() {
               </section>
 
               <div className="split">
-                <section
+                <form
                   className="card"
                   id="step-start"
                   tabIndex={-1}
                   aria-labelledby="heading-start"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    start();
+                  }}
                 >
                   <h2 id="heading-start">{t.getStarted}</h2>
                   <label htmlFor="lang">{t.chooseLang}</label>
@@ -253,13 +265,13 @@ export default function App() {
                       </option>
                     ))}
                   </select>
-                  <button disabled={busy} onClick={start}>
+                  <button type="submit" disabled={busy}>
                     <BusyLabel busy={busy} idle={t.startBtn} active={t.startingBtn} />
                   </button>
                   <p className="hint">
                     {t.startHint}
                   </p>
-                </section>
+                </form>
 
                 <aside className="panel" id="how-it-works" aria-label="How it works">
                   <p className="eyebrow">{t.howEyebrow}</p>
@@ -288,11 +300,15 @@ export default function App() {
 
           {step === "otp" && (
             <div className="split">
-              <section
+              <form
                 className="card"
                 id="step-otp"
                 tabIndex={-1}
                 aria-labelledby="heading-otp"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  verify();
+                }}
               >
                 <h2 id="heading-otp">{t.otpTitle}</h2>
                 <div className="aadhaar-note" role="note">
@@ -326,21 +342,25 @@ export default function App() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 />
-                <button disabled={busy || otp.length !== 6} onClick={verify}>
+                <button type="submit" disabled={busy || otp.length !== 6}>
                   <BusyLabel busy={busy} idle={t.verifyBtn} active={t.verifyingBtn} />
                 </button>
-              </section>
+              </form>
               <StepPanel {...guideFor("otp", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}
 
           {step === "consent" && (
             <div className="split">
-              <section
+              <form
                 className="card"
                 id="step-consent"
                 tabIndex={-1}
                 aria-labelledby="heading-consent"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  grant();
+                }}
               >
                 <h2 id="heading-consent">{t.consentTitle}</h2>
                 <p>
@@ -360,21 +380,25 @@ export default function App() {
                     {o.label}
                   </label>
                 ))}
-                <button disabled={busy || scope.length === 0} onClick={grant}>
+                <button type="submit" disabled={busy || scope.length === 0}>
                   <BusyLabel busy={busy} idle={t.grantBtn} active={t.grantingBtn} />
                 </button>
-              </section>
+              </form>
               <StepPanel {...guideFor("consent", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}
 
           {step === "appraise" && (
             <div className="split">
-              <section
+              <form
                 className="card"
                 id="step-appraise"
                 tabIndex={-1}
                 aria-labelledby="heading-appraise"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  runAppraise();
+                }}
               >
                 <h2 id="heading-appraise">{t.appraiseTitle}</h2>
                 <p>{t.appraiseDesc}</p>
@@ -386,10 +410,10 @@ export default function App() {
                     </span>
                   ))}
                 </div>
-                <button disabled={busy} onClick={runAppraise}>
+                <button type="submit" disabled={busy}>
                   <BusyLabel busy={busy} idle={t.checkBtn} active={t.pullingBtn} />
                 </button>
-              </section>
+              </form>
               <StepPanel {...guideFor("appraise", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
           )}

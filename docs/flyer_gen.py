@@ -198,7 +198,6 @@ def page1(c):
     bridge_mark(c, 36, H-64, 30)
     text(c, 72, H-52, "SetuCredit", size=14, color=PAPER, font="Helvetica-Bold")
     text(c, 72, H-64, "VOICE-FIRST  •  DPI-POWERED", size=6.5, color=ACCENT, font="Helvetica-Bold")
-    text(c, W-36, H-50, "Page 1 / Cover", size=6, color=MUTED, font="Helvetica", align="right")
 
     text(c, 36, H-110, "VOICE-FIRST  •  CONSENT-FIRST", size=7.5, color=ACCENT, font="Helvetica-Bold")
     text(c, 36, H-142, "Your records are", size=29, color=PAPER, font="Helvetica-Bold")
@@ -273,7 +272,7 @@ def page2(c):
     c.setFillColor(NAVY); c.rect(0, H-78, W, 78, stroke=0, fill=1)
     bridge_mark(c, 30, H-58, 24)
     text(c, 60, H-46, "How it works — four steps, one bridge", size=11, color=PAPER, font="Helvetica-Bold")
-    text(c, 60, H-60, "Inside  •  Page 2  •  Guided in your language, by voice or text", size=7, color=MUTED, font="Helvetica")
+    text(c, 60, H-60, "Guided in your language, by voice or text", size=7, color=MUTED, font="Helvetica")
     text(c, W-30, H-46, "2 MIN", size=16, color=ACCENT, font="Helvetica-Bold", align="right")
     text(c, W-30, H-60, "approx. journey", size=6.5, color=MUTED, font="Helvetica", align="right")
 
@@ -322,7 +321,7 @@ def page3(c):
     c.setFillColor(NAVY); c.rect(0, H-78, W, 78, stroke=0, fill=1)
     bridge_mark(c, 30, H-58, 24)
     text(c, 60, H-46, "Your score — the Borrower Readiness Index", size=11, color=PAPER, font="Helvetica-Bold")
-    text(c, 60, H-60, "Inside  •  Page 3  •  Explainable, consented, handed to the lender", size=7, color=MUTED, font="Helvetica")
+    text(c, 60, H-60, "Explainable, consented, handed to the lender", size=7, color=MUTED, font="Helvetica")
     text(c, W-30, H-46, "0–100", size=16, color=ACCENT, font="Helvetica-Bold", align="right")
 
     gauge(c, W/2, H-210, 62, score=72)
@@ -384,7 +383,6 @@ def page4(c):
     bridge_mark(c, 36, H-64, 30)
     text(c, 72, H-52, "SetuCredit", size=14, color=PAPER, font="Helvetica-Bold")
     text(c, 72, H-64, "THE MIDDLEWARE BRIDGE", size=6.5, color=ACCENT, font="Helvetica-Bold")
-    text(c, W-36, H-50, "Back  •  Page 4", size=6, color=MUTED, font="Helvetica", align="right")
 
     text(c, 36, H-104, "Two minutes to a lender-ready package.", size=13, color=PAPER, font="Helvetica-Bold")
     text(c, 36, H-118, "What happens after you tap “Check my readiness”", size=8, color=MUTED, font="Helvetica")
@@ -424,15 +422,21 @@ def page4(c):
     y -= 88
     # QR + contact split
     rounded(c, 36, y-108, 120, 108, 10, fill=PAPER, stroke=None)
-    # fake QR
-    import random
-    random.seed(7)
-    qx, qy = 48, y-96
-    for i in range(12):
-        for j in range(12):
-            if random.random() > 0.45:
-                c.setFillColor(INK)
-                c.rect(qx+i*7, qy+j*7, 6.2, 6.2, stroke=0, fill=1)
+    # real QR encoding the printed URL (segno, quiet zone included)
+    import segno as _segno
+    _qr = _segno.make("https://setucredit.in", micro=False)
+    _m = list(_qr.matrix)
+    _n = len(_m)
+    _box, _qy0, _qx0 = 84, y - 100, 44
+    _cell = _box / (_n + 4)
+    c.saveState()
+    c.setFillColor(INK)
+    for _r, _row in enumerate(_m):
+        for _cc, _v in enumerate(_row):
+            if _v:
+                c.rect(_qx0 + (_cc + 2) * _cell, _qy0 + (_n - 1 - _r + 2) * _cell,
+                       _cell * 0.92, _cell * 0.92, stroke=0, fill=1)
+    c.restoreState()
     text(c, 96, y-114, "SCAN TO TRY", size=6.5, color=DEEP, font="Helvetica-Bold", align="center")
     # contact
     text(c, 170, y-16, "Talk to us", size=10, color=PAPER, font="Helvetica-Bold")
