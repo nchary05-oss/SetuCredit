@@ -39,6 +39,10 @@ class SessionView(BaseModel):
 
 class OtpSend(BaseModel):
     action: Literal["send"]
+    # 12-digit Aadhaar number + explicit resident consent for UIDAI OTP Auth.
+    # The full number is never persisted (Redis hash + masked refs only).
+    aadhaar_number: str = Field(min_length=12, max_length=12)
+    consent: bool = False
 
 
 class OtpVerify(BaseModel):
@@ -54,6 +58,10 @@ class OtpResponse(BaseModel):
     verified: bool | None = None
     dev_otp: str | None = None
     state: str | None = None
+    # UIDAI OTP Auth references: transaction id + masked hints only.
+    txn_id: str | None = None
+    masked_mobile: str | None = None
+    masked_aadhaar: str | None = None
 
 
 class ConsentCreate(BaseModel):

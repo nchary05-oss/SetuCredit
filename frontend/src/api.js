@@ -19,10 +19,10 @@ export const createSession = (language) =>
 
 export const getSession = (sessionId) => request(`/v1/sessions/${sessionId}`);
 
-export const sendOtp = (sessionId) =>
+export const sendOtp = (sessionId, { aadhaar_number, consent }) =>
   request(`/v1/sessions/${sessionId}/otp`, {
     method: "POST",
-    body: JSON.stringify({ action: "send" }),
+    body: JSON.stringify({ action: "send", aadhaar_number, consent }),
   });
 
 export const verifyOtp = (sessionId, otp) =>
@@ -36,6 +36,9 @@ export const grantConsent = (sessionId, scope) =>
     method: "POST",
     body: JSON.stringify({ scope }),
   });
+
+export const revokeConsent = (sessionId) =>
+  request(`/v1/sessions/${sessionId}/consents/revoke`, { method: "POST" });
 
 export const appraise = (sessionId) =>
   request(`/v1/sessions/${sessionId}/appraise`, { method: "POST" });

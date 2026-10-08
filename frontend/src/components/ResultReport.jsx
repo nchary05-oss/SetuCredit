@@ -90,7 +90,15 @@ const inr = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-export default function ResultReport({ result, onRestart }) {
+const LEVER_TIPS = {
+  land: "Land records pulled your score down most. If holdings or tenure papers are incomplete in the registry, getting them corrected is the fastest way to lift this.",
+  discom:
+    "Bill-payment history is your biggest gap. Pay every electricity bill on time for the next few cycles, then check again.",
+  aa: "Bank activity is your biggest gap. Keep regular monthly inflows and avoid long idle stretches, then check again.",
+  uli: "Past borrowing weighs most here. Keep up repayments on existing loans and avoid new late payments, then check again.",
+};
+
+export default function ResultReport({ result, onRestart, consent, t, revokeBusy, onRevoke }) {
   const band = bandFor(result.bri);
   const generatedAt = formatDateTime(new Date());
   const handedOff = result.handoff !== "failed";
@@ -104,6 +112,15 @@ export default function ResultReport({ result, onRestart }) {
   }
 
   const presentSources = SOURCE_ORDER.filter((s) => s in result.attributions);
+  let weakest = null;
+  let weakestRatio = 2;
+  for (const s of presentSources) {
+    const ratio = result.attributions[s] / (result.max_points[s] || 100);
+    if (ratio < weakestRatio) {
+      weakestRatio = ratio;
+      weakest = s;
+    }
+  }
   const donutParts = presentSources.map((source) => ({
     label: SOURCE_SHORT[source],
     value: result.attributions[source],
@@ -126,16 +143,9 @@ export default function ResultReport({ result, onRestart }) {
       </div>
 
       <section className="report-summary" aria-label="Score summary">
-        <div className="gauge-card">
-          <ScoreGauge value={result.bri} color={band.color} bandLabel={band.label} />
-        </div>
-        <div className="summary-side">
-          <p className="summary-eyebrow">Borrower Readiness Index</p>
-          <div className="band">
-            <span className="band-label" style={{ background: band.color }}>
-              {band.label}
-            </span>
-            <span className="band-note">{band.note}</span>
+        <div className="gauge-stack">
+          <div className="gauge-card">
+            <ScoreGauge value={result.bri} color={band.color} bandLabel={band.label} />
           </div>
           <ul className="bri-scale" aria-label="Borrower Readiness Index scale">
             {BRI_BANDS.map((b) => {
@@ -156,6 +166,21 @@ export default function ResultReport({ result, onRestart }) {
               );
             })}
           </ul>
+        </div>
+        <div className="summary-side">
+          <p className="summary-eyebrow">Borrower Readiness Index</p>
+          <div className="band">
+            <span className="band-label" style={{ background: band.color }}>
+              {band.label}
+            </span>
+            <span className="band-note">{band.note}</span>
+          </div>
+          {band.label !== "Strong" && weakest && (
+            <div className="lever-block">
+              <p className="summary-eyebrow">Your biggest lever</p>
+              <p className="lever-text">{LEVER_TIPS[weakest]}</p>
+            </div>
+          )}
           <div className="loan-block">
             <p className="summary-eyebrow">Suggested loan amount</p>
             {result.loan_range ? (
@@ -278,6 +303,30 @@ export default function ResultReport({ result, onRestart }) {
               This assessment used the records you consented to share. They were processed in
               memory for this request only — nothing was stored on our servers.
             </p>
+            {consent && (
+              <div className="consent-receipt" aria-label={t.receiptTitle}>
+                <p className="summary-eyebrow">{t.receiptTitle}</p>
+                <p className="receipt-line">
+                  {t.receiptShared}:{" "}
+                  {consent.scope.map((s) => SOURCE_NAMES[s] ?? s).join(" · ")}
+                </p>
+                <p className="receipt-meta">
+                  {String(consent.consent_id).slice(0, 8)} · {t.receiptValid}{" "}
+                  {new Date(consent.expires_at).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </p>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={revokeBusy}
+                  onClick={onRevoke}
+                >
+                  {revokeBusy ? t.revokingBtn : t.revokeBtn}
+                </button>
+              </div>
+            )}
           </section>
 
           <section className="report-section report-meta-block" aria-label="Report details">

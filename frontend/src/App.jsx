@@ -11,6 +11,11 @@ const LANGUAGES = [
   { code: "ta-IN", label: "தமிழ் (Tamil)" },
   { code: "te-IN", label: "తెలుగు (Telugu)" },
   { code: "mr-IN", label: "मराठी (Marathi)" },
+  { code: "ml-IN", label: "മലയാളം (Malayalam)" },
+  { code: "gu-IN", label: "ગુજરાતી (Gujarati)" },
+  { code: "bho-IN", label: "भोजपुरी (Bhojpuri)" },
+  { code: "or-IN", label: "ଓଡ଼ିଆ (Odia)" },
+  { code: "kn-IN", label: "ಕನ್ನಡ (Kannada)" },
   { code: "en-IN", label: "English" },
 ];
 
@@ -72,13 +77,44 @@ function BusyLabel({ busy, idle, active }) {
   );
 }
 
+function ConsentReceipt({ consent, labels, t, busy, onRevoke }) {
+  if (!consent) return null;
+  const shortId =
+    consent.consent_id && consent.consent_id.length > 8
+      ? consent.consent_id.slice(0, 8)
+      : consent.consent_id;
+  const expiry = new Date(consent.expires_at).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  return (
+    <div className="consent-receipt" aria-label={t.receiptTitle}>
+      <p className="summary-eyebrow">{t.receiptTitle}</p>
+      <p className="receipt-line">
+        {t.receiptShared}: {labels.join(" · ")}
+      </p>
+      <p className="receipt-meta">
+        {shortId} · {t.receiptValid} {expiry}
+      </p>
+      <button type="button" className="secondary" disabled={busy} onClick={onRevoke}>
+        <BusyLabel busy={busy} idle={t.revokeBtn} active={t.revokingBtn} />
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [language, setLanguage] = useState("en-IN");
   const [step, setStep] = useState("start");
   const [otp, setOtp] = useState("");
+  const [aadhaar, setAadhaar] = useState("");
+  const [aadhaarConsent, setAadhaarConsent] = useState(false);
+  const [uidai, setUidai] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
   const [devOtp, setDevOtp] = useState(null);
   const [scope, setScope] = useState(SCOPE_IDS);
+  const [consent, setConsent] = useState(null);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -86,6 +122,16 @@ export default function App() {
   const [pullStatus, setPullStatus] = useState({});
   const firstRender = useRef(true);
   const errorRef = useRef(null);
+  const [theme, setTheme] = useState(
+    () => document.documentElement.getAttribute("data-theme") || "dark",
+  );
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("sc-theme", next);
+    setTheme(next);
+  };
   const t = getStrings(language);
   const scopeOptions = SCOPE_IDS.map((id) => ({ id, label: t[SCOPE_LABEL_KEY[id]] }));
 
@@ -98,9 +144,31 @@ export default function App() {
       const s = await api.createSession(language);
       setSession(s);
       setStep("otp");
+      setOtpSent(false);
+      setUidai(null);
+      setDevOtp(null);
       speak(t.speakVerify, language);
-      const sent = await api.sendOtp(s.session_id);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestOtp = async () => {
+    if (aadhaar.length !== 12 || !aadhaarConsent) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const sent = await api.sendOtp(session.session_id, {
+        aadhaar_number: aadhaar,
+        consent: true,
+      });
+      setUidai(sent);
       setDevOtp(sent.dev_otp);
+      setOtp("");
+      setOtpSent(true);
+      setResendIn(30);
     } catch (err) {
       fail(err);
     } finally {
@@ -114,6 +182,7 @@ export default function App() {
     setError(null);
     try {
       await api.verifyOtp(session.session_id, otp);
+      setAadhaar(""); // pass-through: drop the full number once verified
       setStep("consent");
       speak(t.speakVerified, language);
     } catch (err) {
@@ -124,11 +193,15 @@ export default function App() {
   };
 
   const resend = async () => {
-    if (resendIn > 0) return;
+    if (resendIn > 0 || aadhaar.length !== 12) return;
     setBusy(true);
     setError(null);
     try {
-      const sent = await api.sendOtp(session.session_id);
+      const sent = await api.sendOtp(session.session_id, {
+        aadhaar_number: aadhaar,
+        consent: true,
+      });
+      setUidai(sent);
       setDevOtp(sent.dev_otp);
       setOtp("");
       setResendIn(30);
@@ -149,9 +222,27 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
-      await api.grantConsent(session.session_id, scope);
+      const c = await api.grantConsent(session.session_id, scope);
+      setConsent(c);
       setStep("appraise");
       speak(t.speakGranted, language);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const revoke = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.revokeConsent(session.session_id);
+      setConsent(null);
+      setResult(null);
+      setPullStatus({});
+      setStep("consent");
+      speak(t.speakRevoked, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -186,9 +277,14 @@ export default function App() {
     setStep("start");
     setResult(null);
     setOtp("");
+    setAadhaar("");
+    setAadhaarConsent(false);
+    setUidai(null);
+    setOtpSent(false);
     setDevOtp(null);
     setError(null);
     setPullStatus({});
+    setConsent(null);
   };
 
   useEffect(() => {
@@ -217,6 +313,17 @@ export default function App() {
             <BridgeMark />
             <h1 className="brand-name">SetuCredit</h1>
           </div>
+          <button
+            type="button"
+            className="theme-toggle"
+            data-current={theme}
+            aria-label={theme === "dark" ? "Switch to light appearance" : "Switch to dark appearance"}
+            onClick={toggleTheme}
+          >
+            <Icon name="sun" size={15} className="theme-sun" />
+            <Icon name="moon" size={15} className="theme-moon" />
+            {theme === "dark" ? t.appearanceLight : t.appearanceDark}
+          </button>
           {step === "start" ? (
             <nav className="topnav" aria-label="Primary">
               <a href="#how-it-works">{t.navHow}</a>
@@ -339,7 +446,8 @@ export default function App() {
                 aria-labelledby="heading-otp"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  verify();
+                  if (otpSent) verify();
+                  else requestOtp();
                 }}
               >
                 <h2 id="heading-otp">{t.otpTitle}</h2>
@@ -347,48 +455,96 @@ export default function App() {
                   <strong>{t.aadhaarTitle}</strong>
                   <p>{t.aadhaarBody}</p>
                 </div>
-                <div className="otp-help" role="note" aria-label={t.otpHelpTitle}>
-                  <strong>{t.otpHelpTitle}</strong>
-                  <ul>
-                    <li>{t.otpHelp1}</li>
-                    <li>{t.otpHelp2}</li>
-                    <li>{t.otpHelp3}</li>
-                  </ul>
-                </div>
-                <label htmlFor="otp">
-                  {t.otpLabel}
-                </label>
-                {devOtp && (
-                  <p className="hint" id="otp-hint">
-                    {t.devOtp} <strong>{devOtp}</strong>
-                  </p>
+                {!otpSent ? (
+                  <>
+                    <label htmlFor="aadhaar">{t.aadhaarNumberLabel}</label>
+                    <input
+                      id="aadhaar"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={12}
+                      placeholder={t.aadhaarNumberPlaceholder}
+                      value={aadhaar}
+                      onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <p className="hint">{t.demoAadhaarHint}</p>
+                    <label className="check">
+                      <input
+                        type="checkbox"
+                        checked={aadhaarConsent}
+                        onChange={(e) => setAadhaarConsent(e.target.checked)}
+                      />
+                      {t.aadhaarConsent}
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={busy || aadhaar.length !== 12 || !aadhaarConsent}
+                    >
+                      <BusyLabel busy={busy} idle={t.requestOtpBtn} active={t.requestingBtn} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="otp-help" role="note" aria-label={t.otpHelpTitle}>
+                      <strong>
+                        {speakText(t.otpSentTo, {
+                          mobile: uidai?.masked_mobile ?? "",
+                          aadhaar: uidai?.masked_aadhaar ?? "",
+                        })}
+                      </strong>
+                      <ul>
+                        <li>{t.otpHelp1}</li>
+                        <li>{t.otpHelp2}</li>
+                        <li>{t.otpHelp3}</li>
+                      </ul>
+                    </div>
+                    <label htmlFor="otp">{t.otpLabel}</label>
+                    {devOtp && (
+                      <p className="hint" id="otp-hint">
+                        {t.devOtp} <strong>{devOtp}</strong>
+                      </p>
+                    )}
+                    <input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="123456"
+                      aria-describedby={devOtp ? "otp-hint" : undefined}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <button type="submit" disabled={busy || otp.length !== 6}>
+                      <BusyLabel busy={busy} idle={t.verifyBtn} active={t.verifyingBtn} />
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={busy || resendIn > 0}
+                      onClick={resend}
+                    >
+                      {resendIn > 0
+                        ? speakText(t.resendWait, { s: resendIn })
+                        : busy
+                          ? t.resendingBtn
+                          : t.resendBtn}
+                    </button>
+                    <button
+                      type="button"
+                      className="link-btn"
+                      disabled={busy}
+                      onClick={() => {
+                        setOtpSent(false);
+                        setOtp("");
+                        setError(null);
+                      }}
+                    >
+                      {t.editNumberBtn}
+                    </button>
+                  </>
                 )}
-                <input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder="123456"
-                  aria-describedby={devOtp ? "otp-hint" : undefined}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                />
-                <button type="submit" disabled={busy || otp.length !== 6}>
-                  <BusyLabel busy={busy} idle={t.verifyBtn} active={t.verifyingBtn} />
-                </button>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={busy || resendIn > 0}
-                  onClick={resend}
-                >
-                  {resendIn > 0
-                    ? speakText(t.resendWait, { s: resendIn })
-                    : busy
-                      ? t.resendingBtn
-                      : t.resendBtn}
-                </button>
               </form>
               <StepPanel {...guideFor("otp", t)} eyebrow={t.goodToKnow} note={t.passShort} />
             </div>
@@ -446,6 +602,13 @@ export default function App() {
               >
                 <h2 id="heading-appraise">{t.appraiseTitle}</h2>
                 <p>{t.appraiseDesc}</p>
+                <ConsentReceipt
+                  consent={consent}
+                  labels={scopeOptions.filter((o) => scope.includes(o.id)).map((o) => o.label)}
+                  t={t}
+                  busy={busy}
+                  onRevoke={revoke}
+                />
                 {busy ? (
                   <ul className="pull-list" aria-live="polite" aria-label={t.appraiseTitle}>
                     {scopeOptions
@@ -501,7 +664,14 @@ export default function App() {
               aria-label={`Your result: Borrower Readiness Index ${result.bri} out of 100`}
             >
               <Suspense fallback={<p className="hint">{t.loadingReport}</p>}>
-                <ResultReport result={result} onRestart={restart} />
+                <ResultReport
+                  result={result}
+                  onRestart={restart}
+                  consent={consent}
+                  t={t}
+                  revokeBusy={busy}
+                  onRevoke={revoke}
+                />
               </Suspense>
             </section>
           )}

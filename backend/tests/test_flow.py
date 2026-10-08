@@ -8,15 +8,23 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
+DEMO_AADHAAR = "999999990019"
+
+
+def _send_payload(aadhaar: str = DEMO_AADHAAR, consent: bool = True) -> dict:
+    return {"action": "send", "aadhaar_number": aadhaar, "consent": consent}
+
 
 async def _verified_session(client, language: str = "hi-IN") -> str:
     r = await client.post("/v1/sessions", json={"language": language})
     assert r.status_code == 200
     session_id = r.json()["session_id"]
 
-    r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "send"})
-    assert r.status_code == 200
-    otp = r.json()["dev_otp"]
+    r = await client.post(f"/v1/sessions/{session_id}/otp", json=_send_payload())
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["txn_id"] and body["masked_mobile"] and body["masked_aadhaar"]
+    otp = body["dev_otp"]
     assert otp and len(otp) == 6
 
     wrong = "000000" if otp != "000000" else "999999"
@@ -118,8 +126,24 @@ async def test_invalid_scope_rejected(client):
 
 async def test_session_state_guards(client):
     session_id = await _verified_session(client)
-    r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "send"})
+    r = await client.post(f"/v1/sessions/{session_id}/otp", json=_send_payload())
     assert r.status_code == 409  # already identity-verified
 
     r = await client.get("/v1/sessions/does-not-exist")
     assert r.status_code == 404
+
+
+async def test_aadhaar_consent_required(client):
+    r = await client.post("/v1/sessions", json={"language": "en-IN"})
+    session_id = r.json()["session_id"]
+    r = await client.post(f"/v1/sessions/{session_id}/otp", json=_send_payload(consent=False))
+    assert r.status_code == 403
+
+
+async def test_invalid_aadhaar_rejected(client):
+    r = await client.post("/v1/sessions", json={"language": "en-IN"})
+    session_id = r.json()["session_id"]
+    r = await client.post(
+        f"/v1/sessions/{session_id}/otp", json=_send_payload(aadhaar="123456789012")
+    )
+    assert r.status_code == 422

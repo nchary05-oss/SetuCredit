@@ -59,19 +59,30 @@ async def test_sms_provider_posts_gateway_shape(clean_settings, monkeypatch):
 async def test_otp_stored_as_hash_not_plaintext(client):
     r = await client.post("/v1/sessions", json={"language": "en-IN"})
     session_id = r.json()["session_id"]
-    r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "send"})
-    code = r.json()["dev_otp"]
+    r = await client.post(
+        f"/v1/sessions/{session_id}/otp",
+        json={"action": "send", "aadhaar_number": "999999990019", "consent": True},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["txn_id"] and body["masked_aadhaar"] == "XXXXXXXX0019"
+    code = body["dev_otp"]
     stored = await redis_client.get(f"otp:{session_id}")
     assert stored is not None and stored != code
     assert len(stored) == 64  # sha256 hex
+    # Full Aadhaar must never be stored — only hash + masked refs.
+    txn_raw = await redis_client.get(f"aadhaar_txn:{session_id}")
+    assert txn_raw is not None and "999999990019" not in txn_raw
     r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "verify", "otp": code})
     assert r.status_code == 200
+    assert await redis_client.get(f"aadhaar_txn:{session_id}") is None
 
 
 async def test_attempts_capped_then_reset_on_resend(client):
     r = await client.post("/v1/sessions", json={"language": "en-IN"})
     session_id = r.json()["session_id"]
-    r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "send"})
+    send = {"action": "send", "aadhaar_number": "999999990019", "consent": True}
+    r = await client.post(f"/v1/sessions/{session_id}/otp", json=send)
     code = r.json()["dev_otp"]
     wrong = "000000" if code != "000000" else "999999"
     for _ in range(get_settings().otp_max_attempts):
@@ -83,7 +94,7 @@ async def test_attempts_capped_then_reset_on_resend(client):
     r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "verify", "otp": code})
     assert r.status_code == 400
     # Resend resets the counter; the new code verifies.
-    r = await client.post(f"/v1/sessions/{session_id}/otp", json={"action": "send"})
+    r = await client.post(f"/v1/sessions/{session_id}/otp", json=send)
     assert r.status_code == 200
     r = await client.post(
         f"/v1/sessions/{session_id}/otp",

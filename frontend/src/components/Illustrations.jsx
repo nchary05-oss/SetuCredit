@@ -71,6 +71,13 @@ const ICONS = {
     </>
   ),
   check: <path d="M4.5 12.5l5 5 10-11" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5 5l1.8 1.8M17.2 17.2L19 19M19 5l-1.8 1.8M6.8 17.2L5 19" />
+    </>
+  ),
+  moon: <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5z" />,
 };
 
 export function Icon({ name, size = 20, className }) {
@@ -98,13 +105,13 @@ export function BridgeMark({ size = 30 }) {
       <rect width="32" height="32" rx="9" fill="#0c4a6e" />
       <path
         d="M5 24c3.5-9.5 18.5-9.5 22 0"
-        stroke="#38bdf8"
+        stroke="var(--accent)"
         strokeWidth="2.2"
         strokeLinecap="round"
       />
       <path d="M3.5 18.5h25" stroke="#e0f2fe" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M8 18.5V24M24 18.5V24" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16 14.4v4.1" stroke="#38bdf8" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M8 18.5V24M24 18.5V24" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M16 14.4v4.1" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -138,13 +145,13 @@ export function HeroArt() {
           <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect x="0.5" y="0.5" width="479" height="319" rx="20" fill="#131f38" stroke="#243352" />
+      <rect x="0.5" y="0.5" width="479" height="319" rx="20" fill="var(--il-bg)" stroke="var(--panel-line)" />
       <ellipse cx="240" cy="150" rx="200" ry="130" fill="url(#sa-glow)" />
 
-      <rect x="0" y="248" width="132" height="72" fill="#1b2740" />
-      <rect x="348" y="248" width="132" height="72" fill="#1b2740" />
-      <path d="M0 248h132" stroke="#34d399" strokeWidth="2" opacity="0.55" />
-      <path d="M348 248h132" stroke="#475569" strokeWidth="2" opacity="0.8" />
+      <rect x="0" y="248" width="132" height="72" fill="var(--il-art-bg)" />
+      <rect x="348" y="248" width="132" height="72" fill="var(--il-art-bg)" />
+      <path d="M0 248h132" stroke="var(--status-ok-ink)" strokeWidth="2" opacity="0.55" />
+      <path d="M348 248h132" stroke="var(--il-steel)" strokeWidth="2" opacity="0.8" />
       {waves.map((y, i) => (
         <path
           key={y}
@@ -157,19 +164,19 @@ export function HeroArt() {
         />
       ))}
 
-      <path d="M176 300V90M304 300V90" stroke="#475569" strokeWidth="7" strokeLinecap="round" />
-      <path d="M176 96 Q240 240 304 96" fill="none" stroke="#38bdf8" strokeWidth="3" />
-      <path d="M176 100L132 190M304 100L348 190" stroke="#38bdf8" strokeWidth="2.4" opacity="0.85" />
+      <path d="M176 300V90M304 300V90" stroke="var(--il-steel)" strokeWidth="7" strokeLinecap="round" />
+      <path d="M176 96 Q240 240 304 96" fill="none" stroke="var(--accent)" strokeWidth="3" />
+      <path d="M176 100L132 190M304 100L348 190" stroke="var(--accent)" strokeWidth="2.4" opacity="0.85" />
       {hangers.map(([x, y]) => (
         <path
           key={x}
           d={`M${x} ${y}V190`}
-          stroke="#38bdf8"
+          stroke="var(--accent)"
           strokeWidth="1.5"
           opacity="0.7"
         />
       ))}
-      <rect x="120" y="187" width="240" height="7" rx="3.5" fill="#334155" />
+      <rect x="120" y="187" width="240" height="7" rx="3.5" fill="var(--il-steel)" />
       <path
         d="M132 190.5h216"
         stroke="#0ea5e9"
@@ -178,8 +185,8 @@ export function HeroArt() {
         opacity="0.7"
       />
 
-      <rect x="44" y="140" width="64" height="108" rx="10" fill="#0f172a" stroke="#475569" strokeWidth="2" />
-      <rect x="51" y="148" width="50" height="92" rx="6" fill="#0b1223" />
+      <rect x="44" y="140" width="64" height="108" rx="10" fill="var(--il-bg)" stroke="var(--il-steel)" strokeWidth="2" />
+      <rect x="51" y="148" width="50" height="92" rx="6" fill="var(--il-bg)" />
       {bars.map(([x, h], i) => (
         <rect
           key={x}
@@ -191,13 +198,13 @@ export function HeroArt() {
           fill={i % 2 ? "#0ea5e9" : "#38bdf8"}
         />
       ))}
-      <path d="M114 178a18 18 0 0 1 0 32" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M124 166a30 30 0 0 1 0 56" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
+      <path d="M114 178a18 18 0 0 1 0 32" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M124 166a30 30 0 0 1 0 56" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
 
-      <path d="M378 176L412 152L446 176Z" fill="#334155" />
-      <rect x="384" y="176" width="56" height="72" fill="#1e293b" stroke="#475569" strokeWidth="1.5" />
+      <path d="M378 176L412 152L446 176Z" fill="var(--il-steel)" />
+      <rect x="384" y="176" width="56" height="72" fill="var(--il-panel)" stroke="var(--il-steel)" strokeWidth="1.5" />
       <path d="M396 186v54M412 186v54M428 186v54" stroke="#64748b" strokeWidth="3" />
-      <path d="M384 248h56" stroke="#475569" strokeWidth="2" />
+      <path d="M384 248h56" stroke="var(--il-steel)" strokeWidth="2" />
       <circle cx="412" cy="134" r="15" fill="#34d399" />
       <text
         x="412"
@@ -212,8 +219,8 @@ export function HeroArt() {
       </text>
 
       <g>
-        <rect x="146" y="46" width="86" height="54" rx="8" fill="#1e293b" stroke="#334155" />
-        <rect x="154" y="55" width="44" height="6" rx="3" fill="#475569" />
+        <rect x="146" y="46" width="86" height="54" rx="8" fill="var(--il-panel)" stroke="var(--il-steel)" />
+        <rect x="154" y="55" width="44" height="6" rx="3" fill="var(--il-steel)" />
         <rect x="156" y="84" width="9" height="9" rx="2" fill="#38bdf8" />
         <rect x="170" y="76" width="9" height="17" rx="2" fill="#34d399" />
         <rect x="184" y="70" width="9" height="23" rx="2" fill="#fbbf24" />
@@ -222,11 +229,11 @@ export function HeroArt() {
       </g>
 
       <g>
-        <rect x="298" y="30" width="96" height="48" rx="8" fill="#1e293b" stroke="#334155" />
-        <rect x="307" y="41" width="52" height="6" rx="3" fill="#475569" />
-        <rect x="307" y="54" width="38" height="6" rx="3" fill="#334155" />
+        <rect x="298" y="30" width="96" height="48" rx="8" fill="var(--il-panel)" stroke="var(--il-steel)" />
+        <rect x="307" y="41" width="52" height="6" rx="3" fill="var(--il-steel)" />
+        <rect x="307" y="54" width="38" height="6" rx="3" fill="var(--il-steel)" />
         <circle cx="377" cy="54" r="11" fill="#34d399" opacity="0.18" />
-        <path d="M372 54l3.5 3.5 6-6.5" fill="none" stroke="#34d399" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M372 54l3.5 3.5 6-6.5" fill="none" stroke="var(--status-ok-ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
   );

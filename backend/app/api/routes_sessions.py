@@ -1,4 +1,4 @@
-"""Session lifecycle: create, inspect, Aadhaar OTP stub (DigiLocker stand-in)."""
+"""Session lifecycle: create, inspect, UIDAI OTP Auth (stub by default)."""
 
 import secrets
 from typing import Annotated
@@ -19,6 +19,8 @@ from app.schemas import (
     SessionCreate,
     SessionView,
 )
+from app.uidai import provider as uidai_provider
+from app.uidai.validation import mask_aadhaar, mask_mobile, validate_aadhaar
 
 router = APIRouter(prefix="/v1/sessions", tags=["sessions"])
 
@@ -66,19 +68,58 @@ async def otp(
 
     if body.action == "send":
         sess.require_state(data, "CREATED")
+        if not body.consent:
+            raise HTTPException(status_code=403, detail="aadhaar consent required")
+        aadhaar = (body.aadhaar_number or "").strip()
+        if not validate_aadhaar(aadhaar):
+            raise HTTPException(status_code=422, detail="invalid aadhaar number")
+        try:
+            uidai = await uidai_provider.get_provider().request_otp(
+                session_id=session_id, aadhaar_number=aadhaar
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail="uidai otp request failed") from exc
+        txn_id = uidai["txn_id"]
+        masked_mob = mask_mobile(uidai["registered_mobile"])
+        masked_aad = mask_aadhaar(aadhaar)
         code = f"{secrets.randbelow(10**6):06d}"
         await sess.store_otp(redis_client, session_id, code)
+        await sess.store_aadhaar_txn(
+            redis_client,
+            session_id,
+            txn_id=txn_id,
+            aadhaar_number=aadhaar,
+            masked_aadhaar=masked_aad,
+            masked_mobile=masked_mob,
+        )
         try:
             await otp_provider.get_provider().send(session_id=session_id, code=code, mobile=None)
         except Exception as exc:
             raise HTTPException(status_code=502, detail="otp send failed") from exc
+        await audit.emit(
+            db, session_id=session_id, event_type="identity.otp_requested", entity_id=masked_aad
+        )
+        await db.commit()
         dev_otp = code if get_settings().env == "dev" else None
-        return OtpResponse(sent=True, dev_otp=dev_otp)
+        return OtpResponse(
+            sent=True,
+            dev_otp=dev_otp,
+            txn_id=txn_id,
+            masked_mobile=masked_mob,
+            masked_aadhaar=masked_aad,
+        )
 
     sess.require_state(data, "CREATED")
     if not await sess.verify_otp(redis_client, session_id, body.otp):
         raise HTTPException(status_code=400, detail="invalid otp")
+    txn = await sess.get_aadhaar_txn(redis_client, session_id)
+    await sess.clear_aadhaar_txn(redis_client, session_id)
     await sess.set_state(redis_client, data, "IDENTITY_VERIFIED")
-    await audit.emit(db, session_id=session_id, event_type="identity.verified")
+    await audit.emit(
+        db,
+        session_id=session_id,
+        event_type="identity.verified",
+        entity_id=(txn or {}).get("masked_aadhaar"),
+    )
     await db.commit()
     return OtpResponse(verified=True, state=data["state"])

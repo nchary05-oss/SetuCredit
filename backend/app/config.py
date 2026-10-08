@@ -42,6 +42,15 @@ class Settings(BaseSettings):
     sms_sender_id: str | None = None
     sms_template_id: str | None = None
 
+    # UIDAI OTP Auth via licensed ASA/AUA. "stub" (default) simulates the
+    # txnId + registered-mobile flow in-process (see app/uidai/provider.py);
+    # "live" + credentials routes OTP requests via LiveAsaAuaProvider.
+    uidai_mode: str = "stub"
+    uidai_base_url: str | None = None
+    uidai_aua_code: str | None = None
+    uidai_asa_license_key: str | None = None
+    uidai_api_key: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:

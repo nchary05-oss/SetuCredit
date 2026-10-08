@@ -26,6 +26,14 @@ def _otp_attempts_key(session_id: str) -> str:
     return f"otp_attempts:{session_id}"
 
 
+def _aadhaar_txn_key(session_id: str) -> str:
+    return f"aadhaar_txn:{session_id}"
+
+
+def aadhaar_hash(aadhaar_number: str) -> str:
+    return hashlib.sha256(f"aadhaar:{aadhaar_number}".encode()).hexdigest()
+
+
 def _otp_hash(session_id: str, code: str) -> str:
     return hashlib.sha256(f"{session_id}:{code}".encode()).hexdigest()
 
@@ -100,3 +108,34 @@ async def verify_otp(r: aioredis.Redis, session_id: str, code: str) -> bool:
     await r.delete(_otp_key(session_id))
     await r.delete(_otp_attempts_key(session_id))
     return True
+
+
+async def store_aadhaar_txn(
+    r: aioredis.Redis,
+    session_id: str,
+    *,
+    txn_id: str,
+    aadhaar_number: str,
+    masked_aadhaar: str,
+    masked_mobile: str,
+) -> None:
+    """Bind a UIDAI txn to the session; store only hash + masked refs."""
+    settings = get_settings()
+    payload = json.dumps(
+        {
+            "txn_id": txn_id,
+            "aadhaar_hash": aadhaar_hash(aadhaar_number),
+            "masked_aadhaar": masked_aadhaar,
+            "masked_mobile": masked_mobile,
+        }
+    )
+    await r.set(_aadhaar_txn_key(session_id), payload, ex=settings.otp_ttl_seconds)
+
+
+async def get_aadhaar_txn(r: aioredis.Redis, session_id: str) -> dict | None:
+    raw = await r.get(_aadhaar_txn_key(session_id))
+    return json.loads(raw) if raw else None
+
+
+async def clear_aadhaar_txn(r: aioredis.Redis, session_id: str) -> None:
+    await r.delete(_aadhaar_txn_key(session_id))
