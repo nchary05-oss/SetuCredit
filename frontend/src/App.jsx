@@ -131,12 +131,22 @@ export default function App() {
   const [theme, setTheme] = useState(
     () => document.documentElement.getAttribute("data-theme") || "dark",
   );
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("sc-voice") !== "off");
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("sc-theme", next);
     setTheme(next);
+  };
+  const toggleVoice = () => {
+    const next = !voiceOn;
+    localStorage.setItem("sc-voice", next ? "on" : "off");
+    if (!next && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    setVoiceOn(next);
+  };
+  const say = (text, lang) => {
+    if (voiceOn) speak(text, lang);
   };
   const t = getStrings(language);
   const scopeOptions = SCOPE_IDS.map((id) => ({ id, label: t[SCOPE_LABEL_KEY[id]] }));
@@ -153,7 +163,7 @@ export default function App() {
       setOtpSent(false);
       setUidai(null);
       setDevOtp(null);
-      speak(t.speakVerify, language);
+      say(t.speakVerify, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -190,7 +200,7 @@ export default function App() {
       await api.verifyOtp(session.session_id, otp);
       setAadhaar(""); // pass-through: drop the full number once verified
       setStep("consent");
-      speak(t.speakVerified, language);
+      say(t.speakVerified, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -231,7 +241,7 @@ export default function App() {
       const c = await api.grantConsent(session.session_id, scope);
       setConsent(c);
       setStep("appraise");
-      speak(t.speakGranted, language);
+      say(t.speakGranted, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -270,7 +280,7 @@ export default function App() {
       await new Promise((res) => setTimeout(res, 450));
       setResult(r);
       setStep("result");
-      speak(speakText(t.speakResult, { bri: r.bri }), language);
+      say(speakText(t.speakResult, { bri: r.bri }), language);
     } catch (err) {
       fail(err);
     } finally {
@@ -329,6 +339,16 @@ export default function App() {
             <Icon name="sun" size={15} className="theme-sun" />
             <Icon name="moon" size={15} className="theme-moon" />
             {theme === "dark" ? t.appearanceLight : t.appearanceDark}
+          </button>
+          <button
+            type="button"
+            className="theme-toggle"
+            aria-pressed={voiceOn}
+            aria-label={voiceOn ? t.voiceOff : t.voiceOn}
+            onClick={toggleVoice}
+          >
+            <Icon name="mic" size={15} />
+            {voiceOn ? t.voiceOff : t.voiceOn}
           </button>
           {step === "start" ? (
             <nav className="topnav" aria-label="Primary">

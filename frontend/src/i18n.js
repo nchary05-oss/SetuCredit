@@ -10,6 +10,8 @@ const enIN = {
   startOver: "Start over",
   appearanceDark: "Dark",
   appearanceLight: "Light",
+  voiceOn: "Voice on",
+  voiceOff: "Voice off",
   progress: ["Language", "OTP", "Consent", "Appraise", "Result"],
   heroEyebrow: "Voice-first · DPI-powered",
   heroTitle: "Your records are already a credit history.",
