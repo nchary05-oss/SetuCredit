@@ -60,7 +60,7 @@ Middleware orchestration layer connecting unbanked Indian micro-borrowers to len
 - **Flow**: voice onboarding → Aadhaar OTP (DigiLocker) → AA consent → parallel data pull →
   scoring → partner NBFC webhook → UPI/IMPS disbursal
 - **Backend** (`backend/app/`): FastAPI; `orchestrator/` fans out to `dpi/` adapters in
-  parallel (currently **deterministic stubs** for land/discom/aa/uli — real integrations
+  parallel (currently **deterministic stubs** for land/discom/aa/uli/bbps — real integrations
   replace them behind `DPIAdapter`)
 - **Scoring** (`scoring/`): separate process; `POST /score` → BRI 0–100. Heuristic v1 in
   `model/bri.py`; XGBoost drops in behind `score(features, coverage)`

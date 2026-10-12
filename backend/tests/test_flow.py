@@ -118,6 +118,22 @@ async def test_revoked_consent_blocks_appraise(client):
     assert r.status_code == 409  # state rolled back to IDENTITY_VERIFIED
 
 
+async def test_five_source_flow_scores_bbps(client):
+    session_id = await _verified_session(client)
+    r = await client.post(
+        f"/v1/sessions/{session_id}/consents",
+        json={"scope": ["land", "discom", "aa", "uli", "bbps"]},
+    )
+    assert r.status_code == 200
+
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 200, r.text
+    result = r.json()
+    assert result["sources"]["bbps"]["status"] == "ok"
+    assert "bbps" in result["attributions"]
+    assert abs(sum(result["max_points"].values()) - 100) <= 0.5
+
+
 async def test_invalid_scope_rejected(client):
     session_id = await _verified_session(client)
     r = await client.post(f"/v1/sessions/{session_id}/consents", json={"scope": ["bogus"]})

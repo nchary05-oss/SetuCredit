@@ -4,7 +4,7 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-KNOWN_SOURCES = ("land", "discom", "aa", "uli")
+KNOWN_SOURCES = ("land", "discom", "aa", "uli", "bbps")
 
 
 class Settings(BaseSettings):

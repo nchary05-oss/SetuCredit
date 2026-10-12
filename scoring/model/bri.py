@@ -7,7 +7,7 @@ model swaps in behind `score()` without touching callers.
 
 MODEL_VERSION = "bri-heuristic-0.1.0"
 
-WEIGHTS = {"land": 0.25, "discom": 0.25, "aa": 0.30, "uli": 0.20}
+WEIGHTS = {"land": 0.20, "discom": 0.20, "aa": 0.25, "uli": 0.15, "bbps": 0.20}
 
 LOAN_BANDS = (
     (80, (100_000, 500_000)),
@@ -58,6 +58,13 @@ def _component(source: str, f: dict[str, float]) -> float:
             0.50 * (1.0 - _clamp(f["credit_existing_loans"] / 4.0))
             + 0.30 * _clamp(f["credit_repayment_regular_months"] / 24.0)
             + 0.20 * (1.0 - _clamp(f["credit_delinquencies"] / 3.0))
+        )
+    if source == "bbps":
+        # Thin-file income proxy: regular recharges on one number, sustained.
+        return _clamp(
+            0.50 * f["bbps_recharge_consistency"]
+            + 0.30 * (f["bbps_months_recharged"] / 24.0)
+            + 0.20 * f["bbps_recharge_level"]
         )
     return 0.0
 

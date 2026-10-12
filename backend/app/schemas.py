@@ -65,7 +65,7 @@ class OtpResponse(BaseModel):
 
 
 class ConsentCreate(BaseModel):
-    scope: list[str] = Field(default_factory=lambda: ["land", "discom", "aa", "uli"])
+    scope: list[str] = Field(default_factory=lambda: ["land", "discom", "aa", "uli", "bbps"])
 
 
 class ConsentView(BaseModel):

@@ -6,6 +6,7 @@ const SOURCE_NAMES = {
   discom: "Electricity utility",
   aa: "Bank account (Account Aggregator)",
   uli: "Lending history (RBI ULI)",
+  bbps: "Mobile recharges (BBPS)",
 };
 
 const SOURCE_SHORT = {
@@ -13,18 +14,20 @@ const SOURCE_SHORT = {
   discom: "Electricity",
   aa: "Bank account",
   uli: "Lending history",
+  bbps: "Recharges & bills",
 };
 
-const SOURCE_ICONS = { land: "plant", discom: "bolt", aa: "bank", uli: "clock" };
+const SOURCE_ICONS = { land: "plant", discom: "bolt", aa: "bank", uli: "clock", bbps: "phone" };
 
 const SOURCE_COLORS = {
   land: "#34d399",
   discom: "#fbbf24",
   aa: "#38bdf8",
   uli: "#a78bfa",
+  bbps: "#f472b6",
 };
 
-const SOURCE_ORDER = ["land", "discom", "aa", "uli"];
+const SOURCE_ORDER = ["land", "discom", "aa", "uli", "bbps"];
 
 const FEATURE_LABELS = {
   land_area_acres: (v) => `${v} acres of land holding`,
@@ -43,6 +46,10 @@ const FEATURE_LABELS = {
   credit_existing_loans: (v) => `${v} existing loan${v === 1 ? "" : "s"}`,
   credit_repayment_regular_months: (v) => `${v} months of regular repayment`,
   credit_delinquencies: (v) => `${v} late payment${v === 1 ? "" : "s"} in the last 12 months`,
+  bbps_recharge_consistency: (v) => `${Math.round(v * 100)}% recharge regularity`,
+  bbps_months_recharged: (v) => `${v} months of mobile recharges`,
+  bbps_recharge_level: (v) =>
+    v >= 1 ? "₹500+ average monthly recharge" : `~₹${Math.round(v * 500)} average recharge`,
 };
 
 const PREFIX_TO_SOURCE = [
@@ -50,6 +57,7 @@ const PREFIX_TO_SOURCE = [
   ["utility_", "discom"],
   ["bank_", "aa"],
   ["credit_", "uli"],
+  ["bbps_", "bbps"],
 ];
 
 function bandFor(bri) {
@@ -96,6 +104,7 @@ const LEVER_TIPS = {
     "Bill-payment history is your biggest gap. Pay every electricity bill on time for the next few cycles, then check again.",
   aa: "Bank activity is your biggest gap. Keep regular monthly inflows and avoid long idle stretches, then check again.",
   uli: "Past borrowing weighs most here. Keep up repayments on existing loans and avoid new late payments, then check again.",
+  bbps: "Recharge history is your biggest gap. Recharge the same mobile number regularly for a few months, then check again.",
 };
 
 export default function ResultReport({ result, onRestart, consent, t, revokeBusy, onRevoke }) {

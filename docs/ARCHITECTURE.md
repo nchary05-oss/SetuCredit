@@ -64,7 +64,8 @@ class DPIAdapter(Protocol):
 ```
 
 Adapters planned: `uli/` (RBI Unified Lending Interface), `aa/` (Sahamati Account
-Aggregator), `land/` (Dharani, Bhulekh), `discom/` (state utility boards). Adapters are the
+Aggregator), `land/` (Dharani, Bhulekh), `discom/` (state utility boards), `bbps/`
+(mobile recharges + household bills — the thin-file footprint). Adapters are the
 **only** place raw borrower data enters the process; data never leaves `orchestrator`
 memory except as derived features sent to `scoring/`.
 

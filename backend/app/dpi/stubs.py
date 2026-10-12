@@ -1,6 +1,6 @@
-"""Deterministic stub adapters for the four DPI sources.
+"""Deterministic stub adapters for the five DPI sources.
 
-Stand-ins for real ULI/AA/land/DISCOM integrations: payloads are derived
+Stand-ins for real ULI/AA/land/DISCOM/BBPS integrations: payloads are derived
 from a hash of (session_id, source) so the same session always produces the
 same synthetic records. Real adapters replace these behind DPIAdapter.
 """
@@ -79,4 +79,25 @@ class ULIAdapter:
         return SourceResult(self.source_id, True, payload, None, 1)
 
 
-ALL_ADAPTERS: list = [LandAdapter(), DiscomAdapter(), AAAdapter(), ULIAdapter()]
+class BbpsAdapter:
+    """Mobile recharges + household bills via BBPS (bharat bill payments).
+
+    The thin-file footprint: borrowers with no land, bank, or GST record
+    still recharge the same mobile number month after month.
+    """
+
+    source_id = "bbps"
+
+    async def fetch(self, session_id: str) -> SourceResult:
+        s = _seed(session_id, "bbps")
+        payload = {
+            "biller": ("BBPS-MOBILE", "BBPS-DTH", "BBPS-GAS")[s % 3],
+            "mobile_no": f"{6 + s % 4}{s % 10**9:09d}",
+            "months_recharged": 3 + s % 22,
+            "recharge_consistency": round(0.45 + _unit(s, 6) * 0.55, 2),
+            "avg_monthly_recharge_inr": 100 + s % 900,
+        }
+        return SourceResult(self.source_id, True, payload, None, 1)
+
+
+ALL_ADAPTERS: list = [LandAdapter(), DiscomAdapter(), AAAdapter(), ULIAdapter(), BbpsAdapter()]

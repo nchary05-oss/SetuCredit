@@ -19,9 +19,15 @@ const LANGUAGES = [
   { code: "en-IN", label: "English" },
 ];
 
-const SCOPE_IDS = ["land", "discom", "aa", "uli"];
+const SCOPE_IDS = ["land", "discom", "aa", "uli", "bbps"];
 
-const SCOPE_LABEL_KEY = { land: "scopeLand", discom: "scopeDiscom", aa: "scopeAa", uli: "scopeUli" };
+const SCOPE_LABEL_KEY = {
+  land: "scopeLand",
+  discom: "scopeDiscom",
+  aa: "scopeAa",
+  uli: "scopeUli",
+  bbps: "scopeBbps",
+};
 
 function howItems(t) {
   return [

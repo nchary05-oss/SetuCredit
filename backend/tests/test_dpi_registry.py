@@ -74,3 +74,19 @@ async def test_live_adapter_maps_response_shape(clean_settings, monkeypatch):
         "repayment_regular_months",
         "delinquencies_12m",
     }
+
+
+async def test_bbps_stub_payload_shape():
+    first = await stubs.BbpsAdapter().fetch("sess-1")
+    assert first.ok and first.source_id == "bbps"
+    assert set(first.payload) == {
+        "biller",
+        "mobile_no",
+        "months_recharged",
+        "recharge_consistency",
+        "avg_monthly_recharge_inr",
+    }
+    assert len(first.payload["mobile_no"]) == 10
+    # Deterministic per session: same session, same records.
+    second = await stubs.BbpsAdapter().fetch("sess-1")
+    assert second.payload == first.payload

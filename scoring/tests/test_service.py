@@ -15,6 +15,11 @@ FULL_PAYLOADS = {
         "existing_emi_ratio": 0.2,
     },
     "uli": {"existing_loans": 1, "repayment_regular_months": 24, "delinquencies_12m": 0},
+    "bbps": {
+        "recharge_consistency": 0.85,
+        "months_recharged": 20,
+        "avg_monthly_recharge_inr": 300,
+    },
 }
 
 
@@ -23,7 +28,7 @@ def test_full_payloads_report_fields():
     assert r.status_code == 200
     body = r.json()
     assert 0 <= body["bri"] <= 100
-    assert set(body["attributions"]) == {"land", "discom", "aa", "uli"}
+    assert set(body["attributions"]) == {"land", "discom", "aa", "uli", "bbps"}
     assert abs(sum(body["max_points"].values()) - 100) <= 0.5
     assert abs(sum(body["attributions"].values()) - body["bri"]) <= 1.5
     assert "land_area_acres" in body["features"]

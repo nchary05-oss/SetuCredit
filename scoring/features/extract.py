@@ -1,6 +1,6 @@
 """Feature extraction from in-memory DPI payloads (features only, never records)."""
 
-SOURCES = ("land", "discom", "aa", "uli")
+SOURCES = ("land", "discom", "aa", "uli", "bbps")
 
 
 def extract(payloads: dict[str, dict]) -> tuple[dict[str, float], dict[str, bool]]:
@@ -36,5 +36,13 @@ def extract(payloads: dict[str, dict]) -> tuple[dict[str, float], dict[str, bool
             float(p.get("repayment_regular_months", 0)), 36.0
         )
         features["credit_delinquencies"] = float(p.get("delinquencies_12m", 0))
+
+    if coverage["bbps"]:
+        p = payloads["bbps"]
+        features["bbps_recharge_consistency"] = float(p.get("recharge_consistency", 0.0))
+        features["bbps_months_recharged"] = float(min(int(p.get("months_recharged", 0)), 24))
+        features["bbps_recharge_level"] = min(
+            float(p.get("avg_monthly_recharge_inr", 0.0)) / 500.0, 1.0
+        )
 
     return features, coverage
