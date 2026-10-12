@@ -73,9 +73,11 @@ memory except as derived features sent to `scoring/`.
 
 - Fans out adapter calls concurrently (`asyncio.gather`), per-source timeout (proposed
   5 s), one retry on transient failure.
-- **Partial results**: an appraisal may complete with a subset of sources only if the
-  minimum required set (per scoring config) succeeded; the result carries per-source
-  status so the scoring layer can apply a confidence penalty.
+- **Partial results**: each source carries fixed points (100 × its scoring weight);
+  missing or failed sources score 0 for their share instead of renormalizing the
+  rest — deselecting a source lowers the score by its share. Appraisal still
+  requires the lender-minimum scope (`aa` + `uli`) or returns 422; the result
+  carries per-source status.
 - Emits audit events (source, timestamp, record counts, consent id) — never record
   payloads.
 
@@ -123,8 +125,9 @@ Draft — refine when scaffolding:
 | `GET  /v1/sessions/{id}` | Session state + next action for the PWA |
 | `POST /v1/sessions/{id}/consents` | Initiate AA consent grant; polls scope + expiry |
 | `POST /v1/sessions/{id}/consents/revoke` | Revoke active consent (DPDP), resets session state |
-| `POST /v1/sessions/{id}/appraise` | Fan-out pull → scoring; requires `CONSENT_GRANTED` |
+| `POST /v1/sessions/{id}/appraise` | Fan-out pull → scoring; requires `CONSENT_GRANTED` + lender-minimum scope (`aa`, `uli`) or HTTP 422 |
 | `GET  /v1/appraisals/{id}` | BRI, per-source status, package handoff status |
+| `POST /v1/appraisals/{id}/handoff` | Borrower-confirmed (re)send of appraisal metadata to lender; needs live consent |
 | `POST /v1/webhooks/disbursal` | Inbound NBFC callback (HMAC-signed) |
 | `GET  /healthz` | Liveness |
 
@@ -155,8 +158,10 @@ it does not belong in Postgres.
 - `features/` — feature extraction & transformations; `model/` — BRI logic (heuristic v1
   behind a stable `score(features, coverage)` interface; the trained XGBoost model drops
   in here); `service/` — thin inference API (`POST /score`).
-- Coverage is derived from which payloads are present, so sparse consents still score
-  (remaining source weights renormalize) instead of failing outright.
+- Coverage is derived from which payloads are present. Every source has fixed max
+  points (100 × weight); absent sources contribute 0, so deselecting a source
+  lowers the score by its share. Granting itself stays freely deselectable per
+  RBI/DPDP item-level choice.
 - Scoring is stateless w.r.t. the borrower: no feature store of borrower data.
 
 ## 7. Security & compliance (HLD §5)

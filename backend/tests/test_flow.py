@@ -67,7 +67,13 @@ async def test_full_flow(client):
     appraisal_id = result["appraisal_id"]
 
     # full analysis report payload
-    assert set(result["sources"]) <= set(result["attributions"]) <= {"land", "discom", "aa", "uli"}
+    assert set(result["sources"]) <= set(result["attributions"]) <= {
+        "land",
+        "discom",
+        "aa",
+        "uli",
+        "bbps",
+    }
     assert abs(sum(result["attributions"].values()) - result["bri"]) <= 1.5
     assert abs(sum(result["max_points"].values()) - 100) <= 0.5
     assert "land_area_acres" in result["features"]
@@ -134,10 +140,127 @@ async def test_five_source_flow_scores_bbps(client):
     assert abs(sum(result["max_points"].values()) - 100) <= 0.5
 
 
+async def test_confirm_handoff_resends_package(client):
+    session_id = await _verified_session(client)
+    r = await client.post(
+        f"/v1/sessions/{session_id}/consents",
+        json={"scope": ["land", "discom", "aa", "uli", "bbps"]},
+    )
+    assert r.status_code == 200
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 200, r.text
+    appraisal_id = r.json()["appraisal_id"]
+
+    r = await client.post(f"/v1/appraisals/{appraisal_id}/handoff")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["appraisal_id"] == appraisal_id
+    assert body["handoff"] == "simulated"  # no PARTNER_WEBHOOK_URL in test env
+    assert body["status"] == "handed_off"
+
+
+async def test_confirm_handoff_needs_active_consent(client):
+    session_id = await _verified_session(client)
+    r = await client.post(f"/v1/sessions/{session_id}/consents", json={})
+    assert r.status_code == 200
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 200, r.text
+    appraisal_id = r.json()["appraisal_id"]
+
+    r = await client.post(f"/v1/sessions/{session_id}/consents/revoke")
+    assert r.status_code == 200
+
+    r = await client.post(f"/v1/appraisals/{appraisal_id}/handoff")
+    assert r.status_code == 403
+
+
+async def test_confirm_handoff_unknown_appraisal(client):
+    r = await client.post("/v1/appraisals/does-not-exist/handoff")
+    assert r.status_code == 404
+
+
+async def test_confirm_handoff_sends_signed_package(client, monkeypatch):
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from app.config import get_settings
+
+    received = {}
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            received["body"] = self.rfile.read(int(self.headers["Content-Length"]))
+            received["signature"] = self.headers["X-Signature"]
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    monkeypatch.setenv(
+        "PARTNER_WEBHOOK_URL", f"http://127.0.0.1:{server.server_port}/hook"
+    )
+    monkeypatch.setenv("WEBHOOK_SECRET", "test-secret")
+    get_settings.cache_clear()
+    try:
+        session_id = await _verified_session(client)
+        r = await client.post(
+            f"/v1/sessions/{session_id}/consents",
+            json={"scope": ["land", "discom", "aa", "uli", "bbps"]},
+        )
+        assert r.status_code == 200
+        r = await client.post(f"/v1/sessions/{session_id}/appraise")
+        assert r.status_code == 200, r.text
+        assert r.json()["handoff"] == "sent"
+        appraisal_id = r.json()["appraisal_id"]
+
+        r = await client.post(f"/v1/appraisals/{appraisal_id}/handoff")
+        assert r.status_code == 200, r.text
+        assert r.json()["handoff"] == "sent"
+
+        body = json.loads(received["body"])
+        assert body["appraisal_id"] == appraisal_id
+        assert 0 <= body["bri"] <= 100
+        assert body["loan_range"]["min_inr"] <= body["loan_range"]["max_inr"]
+        good_sig = hmac.new(b"test-secret", received["body"], hashlib.sha256).hexdigest()
+        assert hmac.compare_digest(received["signature"], good_sig)
+    finally:
+        server.shutdown()
+        get_settings.cache_clear()
+
+
 async def test_invalid_scope_rejected(client):
     session_id = await _verified_session(client)
     r = await client.post(f"/v1/sessions/{session_id}/consents", json={"scope": ["bogus"]})
     assert r.status_code == 422
+
+
+async def test_appraise_refuses_without_required_sources(client):
+    session_id = await _verified_session(client)
+    # Free choice is preserved: sparse consent still grants.
+    r = await client.post(f"/v1/sessions/{session_id}/consents", json={"scope": ["land", "bbps"]})
+    assert r.status_code == 200
+
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 422
+    assert "aa" in r.text and "uli" in r.text
+    # Still consented: borrower can revoke + re-grant without restarting.
+    r = await client.get(f"/v1/sessions/{session_id}")
+    assert r.json()["next_action"] == "appraise"
+
+
+async def test_appraise_runs_on_required_sources_only(client):
+    session_id = await _verified_session(client)
+    r = await client.post(f"/v1/sessions/{session_id}/consents", json={"scope": ["aa", "uli"]})
+    assert r.status_code == 200
+
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 200, r.text
+    result = r.json()
+    assert set(result["sources"]) == {"aa", "uli"}
+    assert abs(sum(result["max_points"].values()) - 100) <= 0.5
 
 
 async def test_session_state_guards(client):

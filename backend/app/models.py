@@ -53,6 +53,7 @@ class Appraisal(Base):
     bri: Mapped[int] = mapped_column(Integer)
     model_version: Mapped[str] = mapped_column(String(64))
     sources: Mapped[dict] = mapped_column(JSON)  # per-source status, not records
+    loan_range: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # outcome for retry
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     disbursed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

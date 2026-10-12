@@ -70,16 +70,23 @@ def _component(source: str, f: dict[str, float]) -> float:
 
 
 def score(features: dict[str, float], coverage: dict[str, bool]) -> tuple[int, dict[str, float]]:
-    """Compute BRI and per-source point attributions (renormalized over present sources)."""
+    """Compute BRI and per-source point attributions (fixed points per source).
+
+    Every source is worth 100 x its weight, shared or not: absent sources
+    contribute 0 instead of renormalizing the rest, so deselecting a source
+    lowers the score by its share.
+    """
     present = [s for s in WEIGHTS if coverage.get(s)]
     if not present:
         return 0, {}
-    total_weight = sum(WEIGHTS[s] for s in present)
 
     attributions: dict[str, float] = {}
     points = 0.0
-    for source in present:
-        contribution = 100.0 * (WEIGHTS[source] / total_weight) * _component(source, features)
+    for source in WEIGHTS:
+        if coverage.get(source):
+            contribution = 100.0 * WEIGHTS[source] * _component(source, features)
+        else:
+            contribution = 0.0
         attributions[source] = round(contribution, 1)
         points += contribution
     return int(round(points)), attributions

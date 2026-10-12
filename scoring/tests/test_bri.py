@@ -36,7 +36,9 @@ def test_empty_payloads_score_zero():
     assert attributions == {}
 
 
-def test_partial_coverage_renormalizes():
+def test_missing_sources_score_zero_not_renormalized():
+    full_features, full_coverage = extract(_full_payloads())
+    full_bri, _ = score(full_features, full_coverage)
     payloads = _full_payloads()
     del payloads["discom"]
     del payloads["aa"]
@@ -44,8 +46,12 @@ def test_partial_coverage_renormalizes():
     del payloads["bbps"]
     features, coverage = extract(payloads)
     bri, attributions = score(features, coverage)
-    assert set(attributions) == {"land"}
-    assert 0 <= bri <= 100
+    # Every category keeps its points; absent ones contribute 0.
+    assert set(attributions) == set(WEIGHTS)
+    assert attributions["land"] > 0
+    assert all(attributions[s] == 0.0 for s in ("discom", "aa", "uli", "bbps"))
+    assert bri < full_bri
+    assert abs(sum(attributions.values()) - bri) <= 1.0
 
 
 def test_missing_feature_keys_do_not_crash():

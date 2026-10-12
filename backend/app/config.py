@@ -6,6 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 KNOWN_SOURCES = ("land", "discom", "aa", "uli", "bbps")
 
+# Lender policy: appraisal refuses to run unless these sources are consented.
+# This is NOT an RBI/ULI mandate — RBI requires borrowers to be able to deny
+# any specific data item. Granting consent stays fully deselectable; the
+# lender simply declines to underwrite without its minimum data set.
+REQUIRED_SOURCES = ("aa", "uli")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

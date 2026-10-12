@@ -26,10 +26,8 @@ def compute_score(request: ScoreRequest) -> ScoreResponse:
     features, coverage = extract(request.payloads)
     bri, attributions = score(features, coverage)
     present = [s for s in WEIGHTS if coverage.get(s)]
-    total_weight = sum(WEIGHTS[s] for s in present)
-    max_points = (
-        {s: round(100.0 * WEIGHTS[s] / total_weight, 1) for s in present} if total_weight else {}
-    )
+    # Fixed points per source: every source shows its max even when absent.
+    max_points = {s: round(100.0 * WEIGHTS[s], 1) for s in WEIGHTS} if present else {}
     return ScoreResponse(
         bri=bri,
         model_version=MODEL_VERSION,

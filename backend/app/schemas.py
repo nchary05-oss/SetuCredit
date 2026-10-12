@@ -107,6 +107,12 @@ class AppraisalView(BaseModel):
     disbursed_at: str | None = None
 
 
+class HandoffResponse(BaseModel):
+    appraisal_id: str
+    status: str
+    handoff: Literal["sent", "simulated", "failed"]
+
+
 class HealthResponse(BaseModel):
     status: str
     postgres: str
