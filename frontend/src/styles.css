@@ -170,7 +170,7 @@ body {
   border-radius: 8px;
 }
 
-.link-btn:hover {
+.link-btn:hover:not(:disabled) {
   color: var(--accent);
   background: var(--surface);
 }
@@ -184,16 +184,17 @@ body {
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--surface);
-  color: var(--muted);
+  color: var(--dim);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 150ms ease, border-color 150ms ease;
 }
 
-.theme-toggle:hover {
-  color: var(--accent);
+.theme-toggle:hover:not(:disabled) {
+  color: var(--btn-ink);
   border-color: var(--accent);
+  background: var(--accent);
 }
 
 .theme-toggle svg {
@@ -493,9 +494,27 @@ section:focus {
   color: var(--status-ok-ink);
 }
 
+.req-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--warn-ink, #92400e);
+  background: var(--warn-bg, #fef3c7);
+  border: 1px solid var(--warn-border, #f59e0b);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
 .hint {
   font-size: 0.85rem;
   color: var(--muted);
+  margin: 0;
+}
+
+.success-note {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--status-ok-ink);
   margin: 0;
 }
 
@@ -626,6 +645,12 @@ section:focus {
   border-radius: 8px;
   margin: 0;
   font-size: 0.9rem;
+}
+
+/* form.card > p outranks .error — restore alert contrast inside cards. */
+form.card > p.error {
+  color: var(--error-ink);
+  margin: 0;
 }
 
 /* ---------- side panels ---------- */
@@ -1409,7 +1434,7 @@ footer {
   }
 
   .source-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .footer-grid {

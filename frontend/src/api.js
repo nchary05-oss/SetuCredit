@@ -42,3 +42,6 @@ export const revokeConsent = (sessionId) =>
 
 export const appraise = (sessionId) =>
   request(`/v1/sessions/${sessionId}/appraise`, { method: "POST" });
+
+export const confirmHandoff = (appraisalId) =>
+  request(`/v1/appraisals/${appraisalId}/handoff`, { method: "POST" });

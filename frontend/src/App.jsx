@@ -2,8 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import * as api from "./api.js";
 const ResultReport = lazy(() => import("./components/ResultReport.jsx"));
 import { BridgeMark, HeroArt, Icon } from "./components/Illustrations.jsx";
-import { speak } from "./voice/tts.js";
-import { getStrings, speakText } from "./i18n.js";
+import { setVoiceEnabled, speak } from "./voice/tts.js";import { getStrings, speakText } from "./i18n.js";
 
 const LANGUAGES = [
   { code: "hi-IN", label: "हिन्दी (Hindi)" },
@@ -20,6 +19,10 @@ const LANGUAGES = [
 ];
 
 const SCOPE_IDS = ["land", "discom", "aa", "uli", "bbps"];
+
+// Lender policy mirror of backend REQUIRED_SOURCES: appraisal won't run
+// without these, but granting consent stays freely deselectable.
+const REQUIRED_IDS = ["aa", "uli"];
 
 const SCOPE_LABEL_KEY = {
   land: "scopeLand",
@@ -83,32 +86,6 @@ function BusyLabel({ busy, idle, active }) {
   );
 }
 
-function ConsentReceipt({ consent, labels, t, busy, onRevoke }) {
-  if (!consent) return null;
-  const shortId =
-    consent.consent_id && consent.consent_id.length > 8
-      ? consent.consent_id.slice(0, 8)
-      : consent.consent_id;
-  const expiry = new Date(consent.expires_at).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-  return (
-    <div className="consent-receipt" aria-label={t.receiptTitle}>
-      <p className="summary-eyebrow">{t.receiptTitle}</p>
-      <p className="receipt-line">
-        {t.receiptShared}: {labels.join(" · ")}
-      </p>
-      <p className="receipt-meta">
-        {shortId} · {t.receiptValid} {expiry}
-      </p>
-      <button type="button" className="secondary" disabled={busy} onClick={onRevoke}>
-        <BusyLabel busy={busy} idle={t.revokeBtn} active={t.revokingBtn} />
-      </button>
-    </div>
-  );
-}
-
 export default function App() {
   const [session, setSession] = useState(null);
   const [language, setLanguage] = useState("en-IN");
@@ -123,6 +100,9 @@ export default function App() {
   const [consent, setConsent] = useState(null);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmNote, setConfirmNote] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState(null);
   const [resendIn, setResendIn] = useState(0);
   const [pullStatus, setPullStatus] = useState({});
@@ -142,14 +122,20 @@ export default function App() {
   const toggleVoice = () => {
     const next = !voiceOn;
     localStorage.setItem("sc-voice", next ? "on" : "off");
-    if (!next && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    setVoiceEnabled(next); // module flag stops queued retries too
     setVoiceOn(next);
   };
   const say = (text, lang) => {
     if (voiceOn) speak(text, lang);
   };
+
+  useEffect(() => {
+    setVoiceEnabled(voiceOn); // one-way sync of the stored preference
+  }, []);
   const t = getStrings(language);
   const scopeOptions = SCOPE_IDS.map((id) => ({ id, label: t[SCOPE_LABEL_KEY[id]] }));
+  const missingRequired = REQUIRED_IDS.filter((id) => !scope.includes(id));
+  const missingLabels = missingRequired.map((id) => t[SCOPE_LABEL_KEY[id]]).join(", ");
 
   const fail = (err) => setError(err.message || String(err));
 
@@ -258,7 +244,7 @@ export default function App() {
       setResult(null);
       setPullStatus({});
       setStep("consent");
-      speak(t.speakRevoked, language);
+      say(t.speakRevoked, language);
     } catch (err) {
       fail(err);
     } finally {
@@ -266,9 +252,33 @@ export default function App() {
     }
   };
 
+  const confirm = async () => {
+    if (!result || confirmBusy) return;
+    setConfirmBusy(true);
+    setConfirmNote(null);
+    setError(null);
+    try {
+      // Hold the connecting state for at least 5s so the lender leg is
+      // visible; the API call itself usually returns much faster.
+      const [r] = await Promise.all([
+        api.confirmHandoff(result.appraisal_id),
+        new Promise((res) => setTimeout(res, 5000)),
+      ]);
+      setResult((prev) => (prev ? { ...prev, handoff: r.handoff } : prev));
+      setConfirmed(true);
+      setConfirmNote(t.handoffSuccess);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setConfirmBusy(false);
+    }
+  };
+
   const runAppraise = async () => {
     setBusy(true);
     setError(null);
+    setConfirmNote(null);
+    setConfirmed(false);
     setPullStatus({});
     try {
       const r = await api.appraise(session.session_id);
@@ -292,6 +302,8 @@ export default function App() {
     setSession(null);
     setStep("start");
     setResult(null);
+    setConfirmNote(null);
+    setConfirmed(false);
     setOtp("");
     setAadhaar("");
     setAadhaarConsent(false);
@@ -604,8 +616,16 @@ export default function App() {
                       }
                     />
                     {o.label}
+                    {REQUIRED_IDS.includes(o.id) && (
+                      <span className="req-badge">{t.requiredBadge}</span>
+                    )}
                   </label>
                 ))}
+                {missingRequired.length > 0 && (
+                  <p className="error" role="alert">
+                    {speakText(t.requiredAlert, { items: missingLabels })}
+                  </p>
+                )}
                 <button type="submit" disabled={busy || scope.length === 0}>
                   <BusyLabel busy={busy} idle={t.grantBtn} active={t.grantingBtn} />
                 </button>
@@ -628,13 +648,6 @@ export default function App() {
               >
                 <h2 id="heading-appraise">{t.appraiseTitle}</h2>
                 <p>{t.appraiseDesc}</p>
-                <ConsentReceipt
-                  consent={consent}
-                  labels={scopeOptions.filter((o) => scope.includes(o.id)).map((o) => o.label)}
-                  t={t}
-                  busy={busy}
-                  onRevoke={revoke}
-                />
                 {busy ? (
                   <ul className="pull-list" aria-live="polite" aria-label={t.appraiseTitle}>
                     {scopeOptions
@@ -674,7 +687,12 @@ export default function App() {
                     ))}
                   </div>
                 )}
-                <button type="submit" disabled={busy}>
+                {missingRequired.length > 0 && (
+                  <p className="error" role="alert">
+                    {speakText(t.appraiseBlocked, { items: missingLabels })}
+                  </p>
+                )}
+                <button type="submit" disabled={busy || missingRequired.length > 0}>
                   <BusyLabel busy={busy} idle={t.checkBtn} active={t.pullingBtn} />
                 </button>
               </form>
@@ -697,6 +715,10 @@ export default function App() {
                   t={t}
                   revokeBusy={busy}
                   onRevoke={revoke}
+                  confirmBusy={confirmBusy}
+                  onConfirm={confirm}
+                  confirmNote={confirmNote}
+                  confirmed={confirmed}
                 />
               </Suspense>
             </section>

@@ -82,6 +82,9 @@ const enIN = {
   receiptValid: "valid till",
   revokeBtn: "Revoke consent",
   revokingBtn: "Revoking…",
+  confirmBtn: "Confirm to bank/NBFC",
+  confirmingBtn: "Connecting to bank/NBFC…",
+  handoffSuccess: "Successfully submitted to the bank/NBFC.",
   consentTitle: "Grant consent",
   consentDesc: "SetuCredit reads these records once, only with your consent. Nothing is stored on our servers.",
   scopeLand: "Land registry records",
@@ -91,6 +94,11 @@ const enIN = {
   scopeBbps: "Mobile recharges & household bills",
   grantBtn: "Grant consent",
   grantingBtn: "Granting…",
+  requiredBadge: "Needed for loan check",
+  requiredAlert:
+    "The lender needs {items} to assess your application — the readiness check can't run without them. Unticking is your choice; anything unticked is left out of your score.",
+  appraiseBlocked:
+    "The check can't run without {items} — start over and grant again with them ticked.",
   appraiseTitle: "Check readiness",
   appraiseDesc: "We will pull your records in parallel and compute your BRI score.",
   pullReading: "Reading…",

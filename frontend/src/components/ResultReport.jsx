@@ -107,7 +107,18 @@ const LEVER_TIPS = {
   bbps: "Recharge history is your biggest gap. Recharge the same mobile number regularly for a few months, then check again.",
 };
 
-export default function ResultReport({ result, onRestart, consent, t, revokeBusy, onRevoke }) {
+export default function ResultReport({
+  result,
+  onRestart,
+  consent,
+  t,
+  revokeBusy,
+  onRevoke,
+  confirmBusy,
+  onConfirm,
+  confirmNote,
+  confirmed,
+}) {
   const band = bandFor(result.bri);
   const generatedAt = formatDateTime(new Date());
   const handedOff = result.handoff !== "failed";
@@ -121,16 +132,19 @@ export default function ResultReport({ result, onRestart, consent, t, revokeBusy
   }
 
   const presentSources = SOURCE_ORDER.filter((s) => s in result.attributions);
+  // Zero-point (unshared) sources show in the breakdown above but must not
+  // hijack the lever tip or add empty donut slices.
+  const scoredSources = presentSources.filter((s) => result.sources[s]?.status === "ok");
   let weakest = null;
   let weakestRatio = 2;
-  for (const s of presentSources) {
+  for (const s of scoredSources) {
     const ratio = result.attributions[s] / (result.max_points[s] || 100);
     if (ratio < weakestRatio) {
       weakestRatio = ratio;
       weakest = s;
     }
   }
-  const donutParts = presentSources.map((source) => ({
+  const donutParts = scoredSources.map((source) => ({
     label: SOURCE_SHORT[source],
     value: result.attributions[source],
     color: SOURCE_COLORS[source],
@@ -329,11 +343,24 @@ export default function ResultReport({ result, onRestart, consent, t, revokeBusy
                 <button
                   type="button"
                   className="secondary"
-                  disabled={revokeBusy}
+                  disabled={revokeBusy || confirmed}
                   onClick={onRevoke}
                 >
                   {revokeBusy ? t.revokingBtn : t.revokeBtn}
                 </button>
+                <button
+                  type="button"
+                  disabled={revokeBusy || confirmBusy || confirmed}
+                  onClick={onConfirm}
+                >
+                  {confirmBusy && <span className="spinner" aria-hidden="true" />}
+                  {confirmBusy ? t.confirmingBtn : t.confirmBtn}
+                </button>
+                {confirmNote && (
+                  <p className="success-note" role="status">
+                    {confirmNote}
+                  </p>
+                )}
               </div>
             )}
           </section>
