@@ -1,0 +1,15 @@
+# SetuCredit — pip fallback for the Python services.
+# Canonical env is the uv workspace (root pyproject.toml + backend/ + scoring/):
+#   uv sync --all-packages
+# This file is the union of backend/ and scoring/ runtime dependencies
+# for pip / Docker / non-uv deploys. Dev/test tooling (ruff, pytest,
+# pytest-asyncio) lives in the root [dependency-groups] dev group, not here.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.10
+pydantic-settings>=2.6
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30
+alembic>=1.14
+redis>=5.2
+httpx>=0.28
