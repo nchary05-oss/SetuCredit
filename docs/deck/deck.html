@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SetuCredit — Pitch Deck</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --ink:#0E1F26; --paper:#F7F3EA; --paper2:#EFE8DA; --card:#FFFDF8;
+    --gold:#B97F26; --goldb:#D99A3D; --teal:#155E56;
+    --muted:#5F6B68; --line:rgba(14,31,38,.16); --lineS:rgba(14,31,38,.09);
+    --line-dark:rgba(247,243,234,.16); --lineS-dark:rgba(247,243,234,.09);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#C9C4B8;font-family:Manrope,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .deck{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px 0}
+  .slide{width:1280px;height:720px;background:var(--paper);color:var(--ink);position:relative;overflow:hidden;flex:none}
+  .slide.dark{background:var(--ink);color:var(--paper)}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.045;z-index:5;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='170' height='170' filter='url(%23n)'/></svg>")}
+  .dark .grain{opacity:.06}
+
+  /* ---------- shared chrome ---------- */
+  .head{position:absolute;top:54px;left:74px;right:74px;display:flex;justify-content:space-between;align-items:baseline}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--gold)}
+  .dark .eyebrow{color:var(--goldb)}
+  .pageno{font-size:10.5px;font-weight:600;letter-spacing:.2em;color:rgba(14,31,38,.42)}
+  .dark .pageno{color:rgba(247,243,234,.42)}
+  .h2{font-family:Fraunces,serif;font-variation-settings:'opsz' 60;font-weight:540;font-size:39px;line-height:1.1;letter-spacing:-.012em;margin-top:16px;max-width:1060px}
+  .h1{font-family:Fraunces,serif;font-variation-settings:'opsz' 120;font-weight:520;font-size:94px;line-height:0.98;letter-spacing:-.02em}
+  .foot{position:absolute;left:74px;right:74px;bottom:30px;display:flex;justify-content:space-between;align-items:center;
+    padding-top:13px;border-top:1px solid var(--lineS);font-size:9.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(14,31,38,.40)}
+  .foot .r{color:rgba(14,31,38,.55)}
+  .dark .foot{border-top-color:var(--lineS-dark);color:rgba(247,243,234,.36)}
+  .dark .foot .r{color:rgba(247,243,234,.55)}
+
+  /* double-bezel cards */
+  .shell{background:rgba(14,31,38,.05);border:1px solid var(--lineS);border-radius:24px;padding:7px}
+  .core{background:var(--card);border-radius:18px;padding:20px 22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 22px 38px -30px rgba(14,31,38,.45)}
+  .dark .shell{background:rgba(247,243,234,.06);border-color:var(--lineS-dark)}
+  .dark .core{background:#13272F;box-shadow:inset 0 1px 0 rgba(247,243,234,.07)}
+
+  .big{font-family:Fraunces,serif;font-variation-settings:'opsz' 90;font-weight:560;font-size:52px;letter-spacing:-.01em}
+  .lbl{font-size:12.5px;line-height:1.45;color:var(--muted);font-weight:600}
+  .cap{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .dark .cap{color:var(--goldb)}
+  .body{font-size:15px;line-height:1.62;color:rgba(14,31,38,.78)}
+  .dark .body{color:rgba(247,243,234,.75)}
+
+  .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+
+  .chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:11.5px;font-weight:700;letter-spacing:.02em}
+  .dark .chip{border-color:var(--line-dark)}
+
+  /* ---------- cover / closing ---------- */
+  .cover{background:radial-gradient(1150px 620px at 80% 26%, rgba(217,154,61,.12), transparent 62%), var(--ink)}
+  .archbg{position:absolute;pointer-events:none;opacity:.055}
+  .meta{position:absolute;left:74px;bottom:44px;display:flex;align-items:center;gap:16px;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(247,243,234,.55)}
+  .meta .pill{border:1px solid rgba(217,154,61,.55);color:var(--goldb);border-radius:999px;padding:7px 13px}
+  .meta .dot{width:4px;height:4px;border-radius:50%;background:rgba(247,243,234,.3)}
+
+  /* ---------- flow rail ---------- */
+  .railwrap{position:absolute;left:74px;right:74px;top:322px}
+  .railline{position:absolute;top:15px;left:14px;right:14px;height:1px;background:var(--line-dark)}
+  .stages{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;position:relative}
+  .stage .dot{width:31px;height:31px;border-radius:50%;border:1px solid rgba(217,154,61,.6);color:var(--goldb);
+    display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;background:var(--ink)}
+  .stage .name{margin-top:16px;font-size:13.5px;font-weight:700;letter-spacing:.01em}
+  .stage .desc{margin-top:7px;font-size:11px;line-height:1.5;color:rgba(247,243,234,.6)}
+  .stage .tag{margin-top:9px;display:inline-block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(217,154,61,.85);border:1px solid rgba(217,154,61,.32);border-radius:999px;padding:4px 9px}
+  .lock{position:absolute;left:50%;top:-72px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0}
+  .lock .note{display:flex;align-items:center;gap:8px;border:1px solid rgba(217,154,61,.4);background:rgba(217,154,61,.08);border-radius:999px;padding:7px 14px;font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--goldb);white-space:nowrap}
+  .lock .stem{width:1px;height:42px;background:linear-gradient(rgba(217,154,61,.55), rgba(217,154,61,.1))}
+
+  /* ---------- architecture ---------- */
+  .bands{display:flex;flex-direction:column;gap:14px}
+  .band{display:grid;grid-template-columns:196px 1fr;align-items:center;border:1px solid var(--lineS);border-radius:15px;padding:21px 22px;background:var(--card)}
+  .band .bname{font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .band .bdesc{font-size:13px;line-height:1.5;color:rgba(14,31,38,.8);font-weight:500}
+  .stackchips{display:flex;flex-wrap:wrap;gap:9px}
+  .stackchips .chip{font-size:11px;padding:7px 13px;color:rgba(14,31,38,.75)}
+  .hairy{height:1px;background:var(--lineS)}
+
+  /* ---------- problem / solution ---------- */
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .causes{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--lineS)}
+  .cause{padding:18px 20px 0 0}
+  .cause + .cause{padding-left:20px;border-left:1px solid var(--lineS)}
+  .cause .t{font-size:12.5px;font-weight:700}
+  .cause .d{margin-top:6px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+  .pillars{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .pillar .shell{padding:6px}
+  .pillar .core{padding:18px 17px;height:236px;display:flex;flex-direction:column}
+  .pillar .ic{margin-bottom:auto;color:var(--gold)}
+  .pillar .pt{font-size:12.5px;font-weight:800;margin-top:16px;letter-spacing:.01em}
+  .pillar .pd{margin-top:7px;font-size:11px;line-height:1.5;color:var(--muted)}
+
+  /* ---------- trust / gauge ---------- */
+  .cols2{display:grid;grid-template-columns:1fr 1px 1fr;gap:40px}
+  .vline{background:var(--lineS)}
+  .feat{display:flex;align-items:center;gap:14px;padding:8px 2px;border-bottom:1px solid var(--lineS)}
+  .feat:last-child{border-bottom:none}
+  .feat .ic{color:var(--teal)}
+  .feat .fname{font-size:13px;font-weight:700;flex:1}
+  .feat .fsrc{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .trust{display:flex;gap:14px;padding:10px 0}
+  .trust .ic{flex:none;color:var(--gold);margin-top:2px}
+  .trust .tt{font-size:12.5px;font-weight:700}
+  .trust .td{margin-top:4px;font-size:11.5px;line-height:1.52;color:var(--muted)}
+  .trust + .trust{border-top:1px solid var(--lineS)}
+  .gaugemeta{display:flex;justify-content:space-between;margin-top:5px;font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- economics ---------- */
+  .econrow{display:grid;grid-template-columns:210px 1fr;align-items:center;gap:26px;padding:21px 0;border-top:1px solid var(--lineS)}
+  .econrow .k{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .econrow .v{display:flex;align-items:baseline;gap:18px}
+  .from{font-family:Fraunces,serif;font-variation-settings:'opsz' 60;font-weight:480;font-size:29px;color:rgba(14,31,38,.42);text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:rgba(14,31,38,.35)}
+  .arr{color:var(--gold);font-size:20px}
+  .to{font-family:Fraunces,serif;font-variation-settings:'opsz' 72;font-weight:560;font-size:40px;color:var(--ink);letter-spacing:-.01em}
+  .econrow .sub{font-size:11.5px;color:var(--muted);font-weight:600;align-self:center;margin-left:6px}
+
+  /* ---------- market ---------- */
+  .nums2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .impact{display:flex;flex-direction:column;gap:0}
+  .imp{display:flex;gap:15px;padding:12px 0}
+  .imp + .imp{border-top:1px solid var(--lineS)}
+  .imp .ic{color:var(--teal);flex:none;margin-top:2px}
+  .imp .it{font-size:13px;font-weight:800}
+  .imp .id{margin-top:4px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+  .nextrow{display:flex;align-items:center;gap:12px}
+  .nextrow .nlabel{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- closing ---------- */
+  .closing{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%;padding:0 130px}
+  .closing .line1{font-family:Fraunces,serif;font-variation-settings:'opsz' 96;font-weight:520;font-size:52px;line-height:1.16;letter-spacing:-.015em}
+  .closing .gold{color:var(--goldb)}
+  .closing .row{display:flex;gap:12px;margin-top:44px;flex-wrap:wrap;justify-content:center}
+
+  @page{size:13.3333in 7.5in;margin:0}
+  @media print{
+    html,body{background:#fff}
+    .deck{gap:0;padding:0;display:block}
+    .slide{width:13.3333in;height:7.5in;break-after:page;page-break-after:always}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+    .grain{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- ============ 01 · COVER ============ -->
+<section class="slide dark cover" id="s1">
+  <svg class="archbg" width="1280" height="720" viewBox="0 0 1280 720">
+    <path d="M660 720 C660 320 980 90 1280 90" stroke="#F7F3EA" stroke-width="1.4" fill="none"/>
+    <path d="M760 720 C760 380 1030 190 1280 190" stroke="#F7F3EA" stroke-width="1" fill="none"/>
+  </svg>
+  <div style="position:absolute;left:74px;top:96px;max-width:620px">
+    <div style="font-family:'Noto Serif Devanagari',serif;font-weight:600;font-size:21px;color:var(--goldb);letter-spacing:.04em">सेतु</div>
+    <h1 class="h1" style="margin-top:14px">SetuCredit</h1>
+    <div style="width:66px;height:1px;background:var(--goldb);opacity:.7;margin:30px 0 28px"></div>
+    <div style="font-family:Fraunces,serif;font-variation-settings:'opsz' 40;font-weight:480;font-size:26px;line-height:1.32;color:rgba(247,243,234,.94)">Democratizing rural credit<br>via India&rsquo;s ULI.</div>
+    <p class="body" style="margin-top:22px;max-width:520px;font-size:14.5px;color:rgba(247,243,234,.62)">
+      Voice-guided, consent-first alternative credit passports &mdash; unlocking instant
+      micro-loans for Bharat&rsquo;s next 500 million.
+    </p>
+  </div>
+
+  <svg width="500" height="330" viewBox="0 0 560 320" style="position:absolute;right:58px;bottom:120px">
+    <!-- suspension bridge: deck, cable, hangers, piers -->
+    <line x1="26" y1="232" x2="534" y2="232" stroke="#F7F3EA" stroke-opacity=".5" stroke-width="1.4"/>
+    <path d="M50 232 Q280 -18 510 232" stroke="#D99A3D" stroke-opacity=".85" stroke-width="1.4" fill="none"/>
+    <line x1="142" y1="150" x2="142" y2="232" stroke="#F7F3EA" stroke-opacity=".28"/>
+    <line x1="234" y1="110" x2="234" y2="232" stroke="#F7F3EA" stroke-opacity=".28"/>
+    <line x1="326" y1="110" x2="326" y2="232" stroke="#F7F3EA" stroke-opacity=".28"/>
+    <line x1="418" y1="150" x2="418" y2="232" stroke="#F7F3EA" stroke-opacity=".28"/>
+    <!-- piers -->
+    <line x1="142" y1="232" x2="142" y2="292" stroke="#F7F3EA" stroke-opacity=".38" stroke-width="2"/>
+    <line x1="418" y1="232" x2="418" y2="292" stroke="#F7F3EA" stroke-opacity=".38" stroke-width="2"/>
+    <line x1="122" y1="292" x2="162" y2="292" stroke="#F7F3EA" stroke-opacity=".38" stroke-width="2"/>
+    <line x1="398" y1="292" x2="438" y2="292" stroke="#F7F3EA" stroke-opacity=".38" stroke-width="2"/>
+    <!-- nodes -->
+    <circle cx="142" cy="232" r="3.6" fill="#D99A3D"/><circle cx="234" cy="232" r="3.6" fill="#D99A3D"/>
+    <circle cx="326" cy="232" r="3.6" fill="#D99A3D"/><circle cx="418" cy="232" r="3.6" fill="#D99A3D"/>
+    <text x="280" y="316" text-anchor="middle" font-size="10" letter-spacing="3.2" fill="#F7F3EA" fill-opacity=".55" font-family="Manrope,sans-serif" font-weight="700">ULI &#183; ACCOUNT AGGREGATOR &#183; BHASHINI &#183; UPI</text>
+  </svg>
+
+  <div class="meta">
+    <span class="pill">Hackathon Submission</span>
+    <span>Financial Inclusion &amp; Digital Public Infrastructure</span>
+    <span class="dot"></span>
+    <span>October 2026</span>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 02 · PROBLEM ============ -->
+<section class="slide" id="s2">
+  <div class="head"><span class="eyebrow">The Problem</span><span class="pageno">02 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2" style="max-width:1120px">India&rsquo;s lenders underwrite salaries. Bharat earns from land, labour and livestock.</h2>
+    <p class="body" style="margin-top:14px;max-width:760px;color:var(--muted)">
+      The data-rich, credit-poor paradox: the records that prove a rural household&rsquo;s
+      creditworthiness already exist &mdash; just never in a form underwriting can see.
+    </p>
+
+    <div class="grid4" style="margin-top:34px">
+      <div class="shell"><div class="core" style="padding:18px 20px">
+        <div class="big" style="color:var(--ink)">400M+</div>
+        <div class="lbl" style="margin-top:6px">individuals excluded from formal credit</div>
+      </div></div>
+      <div class="shell"><div class="core" style="padding:18px 20px">
+        <div class="big">63M</div>
+        <div class="lbl" style="margin-top:6px">micro-enterprises outside formal systems</div>
+      </div></div>
+      <div class="shell"><div class="core" style="padding:18px 20px">
+        <div class="big">&#8377;3,000+</div>
+        <div class="lbl" style="margin-top:6px">manual origination cost per small loan</div>
+      </div></div>
+      <div class="shell"><div class="core" style="padding:18px 20px">
+        <div class="big">36&ndash;60%</div>
+        <div class="lbl" style="margin-top:6px">APR paid in predatory informal debt</div>
+      </div></div>
+    </div>
+
+    <div class="causes" style="margin-top:40px">
+      <div class="cause"><div class="t">Rigid underwriting</div><div class="d">CIBIL, ITRs and salary slips are the only accepted proof of worth.</div></div>
+      <div class="cause"><div class="t">Siloed evidence</div><div class="d">Patta records, DISCOM bills and mandi slips stay locked in separate registries.</div></div>
+      <div class="cause"><div class="t">Unviable unit cost</div><div class="d">Manual verification costs more than a small-ticket loan can carry.</div></div>
+      <div class="cause"><div class="t">Predatory fallback</div><div class="d">Excluded households borrow at 36&ndash;60% APR &mdash; or not at all.</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">02 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 03 · SOLUTION ============ -->
+<section class="slide" id="s3">
+  <div class="head"><span class="eyebrow">The Solution</span><span class="pageno">03 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2">A consent-first bridge from records to credit.</h2>
+    <p class="body" style="margin-top:14px;max-width:820px;color:var(--muted)">
+      SetuCredit is a middleware orchestration layer that turns consented, non-financial
+      records into a real-time readiness score &mdash; and a lender-ready package.
+    </p>
+
+    <div class="pillars" style="margin-top:36px">
+      <div class="pillar"><div class="shell"><div class="core">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3"/></svg>
+        <div class="pt">Voice onboarding</div>
+        <div class="pd">Bhashini speech in 12+ Indian dialects, on a 3G-friendly PWA.</div>
+      </div></div></div>
+      <div class="pillar"><div class="shell"><div class="core">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        <div class="pt">Identity</div>
+        <div class="pd">Aadhaar OTP with DigiLocker verification &mdash; no paperwork.</div>
+      </div></div></div>
+      <div class="pillar"><div class="shell"><div class="core">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M12 15v2"/></svg>
+        <div class="pt">Consent first</div>
+        <div class="pd">Explicit, time-bound, revocable consent via Account Aggregator.</div>
+      </div></div></div>
+      <div class="pillar"><div class="shell"><div class="core">
+        <svg class="ic" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-6"/></svg>
+        <div class="pt">Parallel ingestion</div>
+        <div class="pd">ULI and AA rails fan out together &mdash; land, utility, BBPS, banking.</div>
+      </div></div></div>
+      <div class="pillar"><div class="shell"><div class="core">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>
+        <div class="pt">Instant outcome</div>
+        <div class="pd">Readiness Index &rarr; lender webhook &rarr; UPI/IMPS disbursal.</div>
+      </div></div></div>
+    </div>
+
+    <div style="margin-top:34px;display:flex;align-items:center;gap:14px">
+      <div class="cap">Outcome</div>
+      <div class="hairy" style="flex:1"></div>
+      <div style="font-family:Fraunces,serif;font-variation-settings:'opsz' 40;font-weight:500;font-size:19px">
+        First utterance to credited funds, <span style="color:var(--gold)">in under two minutes</span>.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">03 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 04 · FLOW ============ -->
+<section class="slide dark" id="s4">
+  <svg class="archbg" width="1280" height="720" viewBox="0 0 1280 720">
+    <path d="M0 60 C420 60 700 240 700 720" stroke="#F7F3EA" stroke-width="1.2" fill="none"/>
+    <path d="M1280 660 C860 660 580 480 580 60" stroke="#F7F3EA" stroke-width="1.2" fill="none"/>
+  </svg>
+  <div class="head"><span class="eyebrow">The Flow</span><span class="pageno">04 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2" style="color:var(--paper);max-width:1000px">From first utterance to credited funds &mdash; six stages, consent locked in before any data moves.</h2>
+  </div>
+
+  <div class="railwrap">
+    <div class="lock">
+      <div class="note">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D99A3D" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Consent captured &mdash; DPDP enforced in code
+      </div>
+      <div class="stem"></div>
+    </div>
+    <div class="railline"></div>
+    <div class="stages">
+      <div class="stage"><div class="dot">01</div><div class="name">Voice onboarding</div><div class="desc">Speaks in their own dialect &mdash; no forms, no literacy needed.</div><span class="tag">Bhashini</span></div>
+      <div class="stage"><div class="dot">02</div><div class="name">Identity</div><div class="desc">Aadhaar OTP and DigiLocker verification bind the session.</div><span class="tag">DigiLocker</span></div>
+      <div class="stage"><div class="dot">03</div><div class="name">Consent</div><div class="desc">Purpose-scoped, time-bound, one-tap revocable.</div><span class="tag">Account Aggregator</span></div>
+      <div class="stage"><div class="dot">04</div><div class="name">Parallel pull</div><div class="desc">Land, utility and BBPS records fetched in one async fan-out.</div><span class="tag">FastAPI orchestrator</span></div>
+      <div class="stage"><div class="dot">05</div><div class="name">Scoring</div><div class="desc">Readiness Index computed from consented signals only.</div><span class="tag">BRI 0&ndash;100</span></div>
+      <div class="stage"><div class="dot">06</div><div class="name">Disbursal</div><div class="desc">Pre-underwritten package hits the lender; funds move instantly.</div><span class="tag">UPI / IMPS</span></div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:74px;right:74px;bottom:96px;display:grid;grid-template-columns:repeat(4,1fr);gap:36px">
+    <div><div class="cap" style="color:rgba(217,154,61,.9)">Built in</div><div class="body" style="margin-top:5px;font-size:13px">nothing persisted &mdash; pass-through</div></div>
+    <div><div class="cap" style="color:rgba(217,154,61,.9)">Enforced</div><div class="body" style="margin-top:5px;font-size:13px">missing consent is an HTTP 403</div></div>
+    <div><div class="cap" style="color:rgba(217,154,61,.9)">Encrypted</div><div class="body" style="margin-top:5px;font-size:13px">TLS 1.3 &middot; AES-256 audit logs</div></div>
+    <div><div class="cap" style="color:rgba(217,154,61,.9)">Explainable</div><div class="body" style="margin-top:5px;font-size:13px">every score traceable to records</div></div>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 05 · ARCHITECTURE ============ -->
+<section class="slide" id="s5">
+  <div class="head"><span class="eyebrow">Architecture</span><span class="pageno">05 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2">How the ecosystem connects, end to end.</h2>
+    <p class="body" style="margin-top:12px;max-width:880px;color:var(--muted)">
+      Requests flow top to bottom; the orchestrator fans out to every DPI rail in parallel
+      and scores in memory.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 316px;gap:34px;margin-top:30px">
+      <div class="bands">
+        <div class="band"><div class="bname">Experience</div><div class="bdesc">React PWA &mdash; voice-first, low-bandwidth, installable on any Android device.</div></div>
+        <div class="band"><div class="bname">Orchestration</div><div class="bdesc">FastAPI gateway &mdash; async fan-out, consent gate, in-memory pass-through.</div></div>
+        <div class="band"><div class="bname">DPI rails</div><div class="bdesc">RBI ULI &middot; Sahamati Account Aggregator &middot; State land registries &amp; DISCOMs &middot; Bhashini.</div></div>
+        <div class="band"><div class="bname">Intelligence</div><div class="bdesc">Scoring microservice &mdash; Borrower Readiness Index, explainable by design.</div></div>
+        <div class="band"><div class="bname">Lending</div><div class="bdesc">Partner NBFC webhook with HMAC-signed payloads &rarr; instant UPI/IMPS.</div></div>
+      </div>
+      <div>
+        <div class="cap">Stack</div>
+        <div class="stackchips" style="margin-top:14px">
+          <span class="chip">React PWA</span><span class="chip">FastAPI</span><span class="chip">Bhashini</span>
+          <span class="chip">RBI ULI</span><span class="chip">Sahamati AA</span><span class="chip">Scikit-learn / XGBoost</span>
+          <span class="chip">Postgres &middot; audit ledger</span><span class="chip">Redis &middot; sessions</span><span class="chip">Docker Compose</span>
+        </div>
+        <div class="hairy" style="margin:26px 0 20px"></div>
+        <p class="body" style="font-size:12.5px;color:var(--muted)">
+          Real DPI credentials drop in behind each adapter interface &mdash; no architectural change
+          when sandbox access lands.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">05 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 06 · INTELLIGENCE & TRUST ============ -->
+<section class="slide" id="s6">
+  <div class="head"><span class="eyebrow">The Intelligence</span><span class="pageno">06 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:108px">
+    <h2 class="h2" style="max-width:800px">The Borrower Readiness Index &mdash; explainable, consent-gated, honest.</h2>
+
+    <div class="cols2" style="margin-top:20px">
+      <!-- left: gauge + features -->
+      <div>
+        <svg width="355" height="187" viewBox="0 0 360 190">
+          <path d="M30 170 A150 150 0 0 1 133.65 27.34" stroke="rgba(14,31,38,.18)" stroke-width="13" fill="none"/>
+          <path d="M133.65 27.34 A150 150 0 0 1 268.17 48.65" stroke="#155E56" stroke-opacity=".55" stroke-width="13" fill="none"/>
+          <path d="M268.17 48.65 A150 150 0 0 1 330 170" stroke="#B97F26" stroke-width="13" fill="none"/>
+          <circle cx="282.7" cy="60.6" r="7" fill="#0E1F26" stroke="#FFFDF8" stroke-width="2.5"/>
+          <text x="180" y="128" text-anchor="middle" font-family="Fraunces,serif" font-size="50" font-weight="560" fill="#0E1F26">0&ndash;100</text>
+          <text x="180" y="150" text-anchor="middle" font-family="Manrope,sans-serif" font-size="10" font-weight="700" letter-spacing="2.6" fill="#5F6B68">BORROWER READINESS</text>
+        </svg>
+        <div class="gaugemeta" style="padding:0 6px"><span>Building</span><span>Near-ready</span><span>Lender-ready</span></div>
+
+        <div style="margin-top:8px">
+          <div class="feat"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l5-9 3 5 4-7"/></svg><span class="fname">Land ownership &amp; history</span><span class="fsrc">Dharani / Bhulekh</span></div>
+          <div class="feat"><svg class="ic" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span class="fname">Utility payment discipline</span><span class="fsrc">DISCOM</span></div>
+          <div class="feat"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18"/><path d="M8 15.5h3"/></svg><span class="fname">Verified banking depth</span><span class="fsrc">Sahamati AA</span></div>
+          <div class="feat"><svg class="ic" viewBox="0 0 24 24"><path d="M4 17l6-7 4 4 6-8"/><path d="M4 21h16"/></svg><span class="fname">Recharge consistency</span><span class="fsrc">BBPS</span></div>
+          <div class="feat"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="fname">Lender-rail signals</span><span class="fsrc">RBI ULI</span></div>
+        </div>
+        <p class="body" style="margin-top:8px;font-size:11.5px;color:var(--muted)">
+          Heuristic v1 today; XGBoost drops in behind the same interface as pilot data accumulates.
+        </p>
+      </div>
+
+      <div class="vline"></div>
+
+      <!-- right: trust -->
+      <div>
+        <div class="cap">Consent-first by construction</div>
+        <div style="margin-top:16px">
+          <div class="trust"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h11"/><path d="M19 7l2 2-2 2M19 15l2 2-2 2"/></svg>
+            <div><div class="tt">Pass-through memory</div><div class="td">Borrower non-financial data is never persisted &mdash; not even as derived features. Postgres keeps only audit events, consent records and outcomes.</div></div></div>
+          <div class="trust"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z"/><path d="M9 12l2 2 4-4.5"/></svg>
+            <div><div class="tt">Consent enforced in code</div><div class="td">Every DPI pull requires an active, purpose-scoped consent. Missing or revoked consent is an HTTP 403 &mdash; not a policy in a PDF.</div></div></div>
+          <div class="trust"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <div><div class="tt">Encrypted end to end</div><div class="td">TLS 1.3 in transit; AES-256 for every stored audit log and ledger entry.</div></div></div>
+          <div class="trust"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L21 21"/></svg>
+            <div><div class="tt">Explainable outcomes</div><div class="td">Every score is traceable to specific consented records &mdash; no black-box rejections for a first-time borrower.</div></div></div>
+          <div class="trust"><svg class="ic" viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="5" y="11" width="14" height="9" rx="2.5"/></svg>
+            <div><div class="tt">DPDP Act aligned</div><div class="td">Data minimisation, purpose limitation and revocation are implementation choices here &mdash; not compliance afterthoughts.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">06 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 07 · UNIT ECONOMICS ============ -->
+<section class="slide" id="s7">
+  <div class="head"><span class="eyebrow">Unit Economics</span><span class="pageno">07 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2">Turning low-ticket rural lending into a viable channel.</h2>
+
+    <div style="margin-top:26px">
+      <div class="econrow" style="border-top:none;padding-top:8px">
+        <div class="k">Origination cost</div>
+        <div class="v"><span class="from">&#8377;3,000+ manual</span><span class="arr">&rarr;</span><span class="to">&lt; &#8377;50</span><span class="sub">per approved loan</span></div>
+      </div>
+      <div class="econrow">
+        <div class="k">Turnaround</div>
+        <div class="v"><span class="from">3&ndash;4 weeks</span><span class="arr">&rarr;</span><span class="to">under 2 minutes</span><span class="sub">voice to decision</span></div>
+      </div>
+      <div class="econrow">
+        <div class="k">Borrower burden</div>
+        <div class="v"><span class="from">36&ndash;60% informal APR</span><span class="arr">&rarr;</span><span class="to">11&ndash;14%</span><span class="sub">formal bank rate</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px">
+      <div class="shell"><div class="core" style="display:flex;gap:18px;align-items:center">
+        <svg class="ic" viewBox="0 0 24 24" style="width:26px;height:26px;color:var(--gold);flex:none"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.2 10.2c0-1.3 1.2-2 2.8-2s2.8.7 2.8 2-1.2 1.9-2.8 2.2-2.8.9-2.8 2.2 1.2 2 2.8 2 2.8-.7 2.8-2"/></svg>
+        <div><div style="font-size:13.5px;font-weight:800">Free for borrowers</div>
+        <div class="lbl" style="margin-top:4px">No fees, no hidden charges &mdash; ever.</div></div>
+      </div></div>
+      <div class="shell"><div class="core" style="display:flex;gap:18px;align-items:center">
+        <svg class="ic" viewBox="0 0 24 24" style="width:26px;height:26px;color:var(--teal);flex:none"><path d="M4 19h16"/><path d="M6 15l4.5-6 3 3.5L20 5"/><path d="M20 5h-4.5M20 5v4.5"/></svg>
+        <div><div style="font-size:13.5px;font-weight:800">0.75&ndash;1.5% origination fee</div>
+        <div class="lbl" style="margin-top:4px">Paid by lenders &mdash; only on approved, originated loans.</div></div>
+      </div></div>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">07 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 08 · MARKET & IMPACT ============ -->
+<section class="slide" id="s8">
+  <div class="head"><span class="eyebrow">Market &amp; Impact</span><span class="pageno">08 / 09</span></div>
+  <div style="position:absolute;left:74px;right:74px;top:118px">
+    <h2 class="h2">Bharat&rsquo;s next 500 million &mdash; reachable, and bankable.</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px">
+      <div class="shell"><div class="core" style="padding:20px">
+        <div class="big" style="font-size:58px">140M</div>
+        <div class="lbl" style="margin-top:6px">smallholder farmers in the addressable segment &mdash; seasonal, asset-backed, invisible to CIBIL.</div>
+      </div></div>
+      <div class="shell"><div class="core" style="padding:20px">
+        <div class="big" style="font-size:58px">63M</div>
+        <div class="lbl" style="margin-top:6px">micro-enterprises running on real cash flows that never enter a formal balance sheet.</div>
+      </div></div>
+    </div>
+
+    <div class="impact" style="margin-top:20px">
+      <div class="imp">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/></svg>
+        <div><div class="it">Timely liquidity</div><div class="id">Fertiliser procurement and micro-inventory turnover funded at the moment they matter, not three weeks later.</div></div>
+      </div>
+      <div class="imp">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/></svg>
+        <div><div class="it">Formal identity creation</div><div class="id">Each appraisal builds an auditable track record &mdash; the first step from thin-file to bankable.</div></div>
+      </div>
+      <div class="imp">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 17l5.5-6.5 3.5 3.5L20 6.5"/><path d="M14.5 6.5H20V12"/></svg>
+        <div><div class="it">Fairer rates</div><div class="id">An escape route from 36&ndash;60% informal debt into 11&ndash;14% formal bank credit.</div></div>
+      </div>
+    </div>
+
+    <div class="nextrow" style="margin-top:16px">
+      <span class="nlabel">Where we go next</span>
+      <span class="chip">RBI sandbox validation</span>
+      <span class="chip">First pilot NBFC</span>
+      <span class="chip">Dialect expansion</span>
+    </div>
+  </div>
+  <div class="foot"><span>SetuCredit &mdash; Hackathon Submission</span><span class="r">08 / 09</span></div>
+  <div class="grain"></div>
+</section>
+
+<!-- ============ 09 · CLOSING ============ -->
+<section class="slide dark" id="s9">
+  <svg class="archbg" width="1280" height="720" viewBox="0 0 1280 720">
+    <path d="M240 720 C240 300 560 90 880 60" stroke="#F7F3EA" stroke-width="1.3" fill="none"/>
+    <path d="M360 720 C360 380 640 200 940 170" stroke="#F7F3EA" stroke-width="1" fill="none"/>
+    <path d="M1040 60 C1040 320 900 520 660 720" stroke="#F7F3EA" stroke-width="1" fill="none"/>
+  </svg>
+  <div class="closing">
+    <div class="line1">
+      Just as UPI unlocked digital payments,<br>
+      SetuCredit unlocks <span class="gold">trusted credit data</span> for Bharat.
+    </div>
+    <div class="row">
+      <span class="chip" style="color:rgba(247,243,234,.85)">RBI ULI</span>
+      <span class="chip" style="color:rgba(247,243,234,.85)">Account Aggregator &mdash; Sahamati</span>
+      <span class="chip" style="color:rgba(247,243,234,.85)">Bhashini</span>
+      <span class="chip" style="color:rgba(247,243,234,.85)">UPI / IMPS</span>
+    </div>
+    <div style="margin-top:64px;display:flex;align-items:center;gap:14px;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(247,243,234,.5)">
+      <span style="font-family:'Noto Serif Devanagari',serif;font-weight:600;font-size:15px;letter-spacing:.04em;color:#D99A3D">सेतु</span>
+      <span>SetuCredit Core Team</span><span style="opacity:.4">&middot;</span>
+      <span>github.com/nchary05-oss/SetuCredit</span><span style="opacity:.4">&middot;</span>
+      <span>October 2026</span>
+    </div>
+  </div>
+  <div class="grain"></div>
+</section>
+
+</div>
+<script>
+  // QA helper: ?only=s4 hides every other slide so a screenshot captures exactly one page.
+  const only = new URLSearchParams(location.search).get("only");
+  if (only) {
+    document.querySelectorAll(".slide").forEach((s) => { if (s.id !== only) s.style.display = "none"; });
+    const deck = document.querySelector(".deck");
+    deck.style.padding = "0"; deck.style.gap = "0";
+  }
+</script>
+</body>
+</html>
