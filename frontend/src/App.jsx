@@ -2,7 +2,8 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import * as api from "./api.js";
 const ResultReport = lazy(() => import("./components/ResultReport.jsx"));
 import { BridgeMark, HeroArt, Icon } from "./components/Illustrations.jsx";
-import { setVoiceEnabled, speak } from "./voice/tts.js";import { getStrings, speakText } from "./i18n.js";
+import { setVoiceEnabled, speak } from "./voice/tts.js";
+import { playDing } from "./voice/sound.js";import { getStrings, speakText } from "./i18n.js";
 
 const LANGUAGES = [
   { code: "hi-IN", label: "हिन्दी (Hindi)" },
@@ -112,6 +113,7 @@ export default function App() {
     () => document.documentElement.getAttribute("data-theme") || "dark",
   );
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("sc-voice") !== "off");
+  const [soundOn, setSoundOn] = useState(() => localStorage.getItem("sc-sound") !== "off");
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -124,6 +126,11 @@ export default function App() {
     localStorage.setItem("sc-voice", next ? "on" : "off");
     setVoiceEnabled(next); // module flag stops queued retries too
     setVoiceOn(next);
+  };
+  const toggleSound = () => {
+    const next = !soundOn;
+    localStorage.setItem("sc-sound", next ? "on" : "off");
+    setSoundOn(next);
   };
   const say = (text, lang) => {
     if (voiceOn) speak(text, lang);
@@ -267,6 +274,7 @@ export default function App() {
       setResult((prev) => (prev ? { ...prev, handoff: r.handoff } : prev));
       setConfirmed(true);
       setConfirmNote(t.handoffSuccess);
+      if (soundOn) playDing();
     } catch (err) {
       fail(err);
     } finally {
@@ -341,27 +349,39 @@ export default function App() {
             <BridgeMark />
             <h1 className="brand-name">SetuCredit</h1>
           </div>
-          <button
-            type="button"
-            className="theme-toggle"
-            data-current={theme}
-            aria-label={theme === "dark" ? "Switch to light appearance" : "Switch to dark appearance"}
-            onClick={toggleTheme}
-          >
-            <Icon name="sun" size={15} className="theme-sun" />
-            <Icon name="moon" size={15} className="theme-moon" />
-            {theme === "dark" ? t.appearanceLight : t.appearanceDark}
-          </button>
-          <button
-            type="button"
-            className="theme-toggle"
-            aria-pressed={voiceOn}
-            aria-label={voiceOn ? t.voiceOff : t.voiceOn}
-            onClick={toggleVoice}
-          >
-            <Icon name="mic" size={15} />
-            {voiceOn ? t.voiceOff : t.voiceOn}
-          </button>
+          <div className="topbar-pills">
+            <button
+              type="button"
+              className="theme-toggle"
+              data-current={theme}
+              aria-label={theme === "dark" ? "Switch to light appearance" : "Switch to dark appearance"}
+              onClick={toggleTheme}
+            >
+              <Icon name="sun" size={15} className="theme-sun" />
+              <Icon name="moon" size={15} className="theme-moon" />
+              {theme === "dark" ? t.appearanceLight : t.appearanceDark}
+            </button>
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-pressed={voiceOn}
+              aria-label={voiceOn ? t.voiceOff : t.voiceOn}
+              onClick={toggleVoice}
+            >
+              <Icon name="mic" size={15} />
+              {voiceOn ? t.voiceOff : t.voiceOn}
+            </button>
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-pressed={soundOn}
+              aria-label={soundOn ? t.soundOff : t.soundOn}
+              onClick={toggleSound}
+            >
+              <Icon name="bell" size={15} />
+              {soundOn ? t.soundOff : t.soundOn}
+            </button>
+          </div>
           {step === "start" ? (
             <nav className="topnav" aria-label="Primary">
               <a href="#how-it-works">{t.navHow}</a>

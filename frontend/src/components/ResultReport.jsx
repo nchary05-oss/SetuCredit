@@ -121,7 +121,7 @@ export default function ResultReport({
 }) {
   const band = bandFor(result.bri);
   const generatedAt = formatDateTime(new Date());
-  const handedOff = result.handoff !== "failed";
+  const handedOff = result.handoff === "sent";
 
   const details = {};
   for (const [key, format] of Object.entries(FEATURE_LABELS)) {
@@ -320,7 +320,9 @@ export default function ResultReport({
             <p>
               {handedOff
                 ? `Your pre-underwritten package (${result.appraisal_id.slice(0, 8)}) has been shared with the partner lender. After their approval, funds disburse instantly via UPI/IMPS.`
-                : "Your package could not be shared with the partner lender right now. Please start a new session and try again."}
+                : result.handoff === "simulated"
+                  ? "Your pre-underwritten package is ready but no lender endpoint is connected here, so nothing has left this system. Tap Confirm to Bank/NBFC below to record the handoff."
+                  : "Your package could not reach the partner lender. Tap Confirm to Bank/NBFC below to retry."}
             </p>
             <p className="consent-note">
               This assessment used the records you consented to share. They were processed in

@@ -143,6 +143,14 @@ body {
   color: var(--ink);
 }
 
+.topbar-pills {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .topnav {
   display: none;
   gap: 24px;
@@ -1300,7 +1308,7 @@ footer {
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
     gap: 32px;
-    align-items: start;
+    align-items: stretch;
   }
 
   .panel {
