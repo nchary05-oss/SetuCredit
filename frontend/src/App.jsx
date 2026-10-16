@@ -3,7 +3,8 @@ import * as api from "./api.js";
 const ResultReport = lazy(() => import("./components/ResultReport.jsx"));
 import { BridgeMark, HeroArt, Icon } from "./components/Illustrations.jsx";
 import { setVoiceEnabled, speak } from "./voice/tts.js";
-import { playDing } from "./voice/sound.js";import { getStrings, speakText } from "./i18n.js";
+import { playDing } from "./voice/sound.js";
+import { getStrings, speakText } from "./i18n.js";
 
 const LANGUAGES = [
   { code: "hi-IN", label: "हिन्दी (Hindi)" },
