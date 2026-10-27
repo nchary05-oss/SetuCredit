@@ -49,6 +49,27 @@ make db-revision m="add foo table"  # autogenerate one (needs live Postgres)
 
 Checks: `make test` (pytest), `make lint` (ruff), `make fmt`.
 
+## Deploy (Render)
+
+This repo is a Render Blueprint: `render.yaml` at the repo root defines
+Postgres, Key Value (Redis), and the three web services (scoring, backend,
+PWA) from the repo Dockerfiles — build contexts point at the repo root, so a
+plain fork-and-apply works with **no `requirements.txt` juggling**.
+
+```bash
+# Render Dashboard → New → Blueprint → select this repo → apply
+```
+
+- Secrets (`PARTNER_WEBHOOK_URL`, ULI/UIDAI/SMS credentials) are marked
+  `sync: false` and prompted at creation; `WEBHOOK_SECRET` auto-generates.
+- `ENV=production` hides `dev_otp`; for **demo/no-creds deploys** set ENV to
+  `dev` in the dashboard (OTP is then shown in API responses).
+- The nginx proxy target (`BACKEND_URL`) and the scoring URL are hardcoded to
+  the `<name>.onrender.com` subdomains in `render.yaml`; if those names are
+  taken on Render (it appends a random suffix), update both values.
+- Free-tier Postgres/Redis are for demo only and expire — upgrade `plan:` for
+  production.
+
 Prefer raw commands? Equivalent manual steps: `uv sync --all-packages`;
 `docker compose -f infra/docker-compose.yml up -d postgres redis`;
 `uv run uvicorn app.main:app --port 8000` (backend) and

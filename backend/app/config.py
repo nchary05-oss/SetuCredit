@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 KNOWN_SOURCES = ("land", "discom", "aa", "uli", "bbps")
@@ -56,6 +57,17 @@ class Settings(BaseSettings):
     uidai_aua_code: str | None = None
     uidai_asa_license_key: str | None = None
     uidai_api_key: str | None = None
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _force_asyncpg_driver(cls, url: str) -> str:
+        # Managed providers (Render, Heroku) hand out postgres:// or
+        # postgresql://; the async engine needs the asyncpg driver scheme.
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
 
 @lru_cache
