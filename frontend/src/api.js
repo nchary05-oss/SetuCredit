@@ -1,5 +1,9 @@
 async function request(path, options = {}) {
-  const response = await fetch(path, {
+  // window.SETUCREDIT_API_BASE is injected at container start (config.js ->
+  // nginx envsubst). Empty locally: the PWA is same-origin (Vite proxy /
+  // compose nginx). On Render the browser calls the backend URL directly.
+  const base = globalThis.SETUCREDIT_API_BASE || "";
+  const response = await fetch(base + path, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });

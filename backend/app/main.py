@@ -12,6 +12,7 @@ from app.api import (
     routes_sessions,
     routes_webhooks,
 )
+from app.config import get_settings
 from app.db import dispose_engine
 from app.redis_client import redis_client
 from app.session import StateError
@@ -31,6 +32,19 @@ def create_app() -> FastAPI:
         description="Consent-gated middleware orchestration layer (HLD v1.0)",
         lifespan=lifespan,
     )
+
+    # Browsers deployed on Render hit this API directly (www origin differs);
+    # cors_origins stays empty locally, where the PWA is same-origin.
+    settings_cors = get_settings().cors_origin_list
+    if settings_cors:
+        from fastapi.middleware.cors import CORSMiddleware
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings_cors,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.exception_handler(StateError)
     async def state_error_handler(request: Request, exc: StateError) -> JSONResponse:

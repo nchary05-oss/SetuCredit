@@ -15,3 +15,11 @@ assert all(
     "$host" in l or "$proxy_add_x_forwarded_for" in l or "$uri" in l for l in nginx_vars
 ), nginx_vars
 print("OK: braced BACKEND_URL substituted; nginx-native vars stay literal")
+
+# config.js.template: only PWA_API_BASE is braced, and it substitutes cleanly
+cfg = open("frontend/config.js.template").read()
+assert "${PWA_API_BASE}" in cfg
+assert not re.search(r"\$\{(?!PWA_API_BASE\b)\w+\}", cfg), "stray braced vars in config.js.template"
+sub = cfg.replace("${PWA_API_BASE}", "https://setucredit-backend.onrender.com")
+assert 'window.SETUCREDIT_API_BASE = "https://setucredit-backend.onrender.com";' in sub
+print("OK: config.js.template substitutes PWA_API_BASE and nothing else")

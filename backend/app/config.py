@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     scoring_service_url: str = "http://localhost:8001"
     partner_webhook_url: str | None = None
     webhook_secret: str = "dev-webhook-secret"
+    # Browsers on Render call the backend's public URL directly (the PWA's
+    # nginx proxy can't reliably hop between Render services). Empty = no
+    # CORS origins (same-origin only, as in docker compose).
+    cors_origins: str = ""
 
     session_ttl_seconds: int = 3600
     otp_ttl_seconds: int = 300
@@ -68,6 +72,10 @@ class Settings(BaseSettings):
         if url.startswith("postgresql://"):
             return url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return url
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 @lru_cache

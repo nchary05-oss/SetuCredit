@@ -1,0 +1,3 @@
+// Browser-side API base, generated from $PWA_API_BASE at container start
+// (see 40-setucredit-config.sh). Empty string = same-origin (compose/dev).
+window.SETUCREDIT_API_BASE = "${PWA_API_BASE}";
