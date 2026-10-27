@@ -26,6 +26,7 @@ services:
     dockerfilePath: infra/docker/scoring.Dockerfile
     dockerContext: . # uv workspace root (pyproject.toml + uv.lock live here)
     plan: free
+    autoDeploy: true
     healthCheckPath: /healthz
     envVars:
       - key: ENV
@@ -38,6 +39,7 @@ services:
     dockerfilePath: infra/docker/backend.Dockerfile
     dockerContext: .
     plan: free
+    autoDeploy: true
     healthCheckPath: /healthz
     envVars:
       - key: ENV
@@ -78,6 +80,7 @@ services:
     dockerfilePath: frontend/Dockerfile
     dockerContext: frontend
     plan: free
+    autoDeploy: true
     healthCheckPath: / # SPA: any path serves index.html
     envVars:
       - key: BACKEND_URL
