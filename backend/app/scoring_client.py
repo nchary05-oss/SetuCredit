@@ -1,49 +1,31 @@
-"""HTTP client for the scoring microservice (separate process by design)."""
+"""HTTP client for the scoring microservice, with in-process fallback."""
 
-import asyncio
-import time
+import logging
 
 import httpx
 
 from app.config import get_settings
+from app.scoring_fallback import compute_in_process
+
+logger = logging.getLogger(__name__)
 
 
 async def score(payloads: dict[str, dict]) -> dict:
+    """Score DPI payloads: tries microservice; falls back to in-process engine if cold."""
     settings = get_settings()
-    deadline = time.monotonic() + settings.scoring_timeout_seconds
-    last_exc: Exception | None = None
 
-    async with httpx.AsyncClient(base_url=settings.scoring_service_url) as client:
-        while time.monotonic() < deadline:
-            remaining = max(1.0, deadline - time.monotonic())
-            try:
-                response = await client.post(
-                    "/score",
-                    json={"payloads": payloads},
-                    timeout=min(remaining, 15.0),
-                )
-                if response.status_code == 200:
-                    return response.json()
-                if response.status_code in (502, 503, 504):
-                    # Transient gateway response while host (e.g. Render) spins up container
-                    await asyncio.sleep(2.0)
-                    continue
-                response.raise_for_status()
-            except (
-                httpx.ConnectError,
-                httpx.ConnectTimeout,
-                httpx.ReadTimeout,
-                httpx.HTTPStatusError,
-            ) as exc:
-                last_exc = exc
-                if time.monotonic() + 2.0 < deadline:
-                    await asyncio.sleep(2.0)
-                    continue
-                raise
+    # Try microservice with short timeout so cold starts on free hosts don't stall the user
+    try:
+        async with httpx.AsyncClient(base_url=settings.scoring_service_url, timeout=4.0) as client:
+            response = await client.post("/score", json={"payloads": payloads})
+            if response.status_code == 200:
+                return response.json()
+            logger.info("Scoring microservice returned %s; using fallback", response.status_code)
+    except Exception as exc:
+        logger.info("Scoring microservice unavailable (%s); using fallback", exc)
 
-        if last_exc:
-            raise last_exc
-        raise httpx.ConnectTimeout("Scoring service request timed out")
+    # In-process calculation ensures appraisal NEVER fails on cold start or network hiccups
+    return compute_in_process(payloads)
 
 
 async def warmup() -> None:

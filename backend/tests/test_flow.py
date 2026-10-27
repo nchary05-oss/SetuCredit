@@ -293,3 +293,25 @@ async def test_scoring_warmup():
 
     # Best-effort warmup should never raise even if endpoint is slow or failing
     await warmup()
+
+
+async def test_appraise_falls_back_when_scoring_service_down(client, monkeypatch):
+    monkeypatch.setenv("SCORING_SERVICE_URL", "http://127.0.0.1:59999")
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+
+    session_id = await _verified_session(client)
+    r = await client.post(
+        f"/v1/sessions/{session_id}/consents",
+        json={"scope": ["land", "discom", "aa", "uli", "bbps"]},
+    )
+    assert r.status_code == 200
+
+    # Appraisal must succeed smoothly even when scoring microservice is completely down
+    r = await client.post(f"/v1/sessions/{session_id}/appraise")
+    assert r.status_code == 200, r.text
+    result = r.json()
+    assert 0 <= result["bri"] <= 100
+    assert result["state"] == "HANDED_OFF"
+    get_settings.cache_clear()

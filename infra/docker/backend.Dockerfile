@@ -12,6 +12,7 @@ COPY scoring/pyproject.toml scoring/
 RUN uv sync --all-packages --locked --no-dev --no-install-project
 
 COPY backend backend
+COPY scoring scoring
 RUN uv sync --all-packages --locked --no-dev
 
 WORKDIR /app/backend
