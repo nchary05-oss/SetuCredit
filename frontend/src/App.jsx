@@ -88,6 +88,28 @@ function BusyLabel({ busy, idle, active }) {
   );
 }
 
+function formatErrorMessage(err) {
+  const raw = err?.message || String(err || "");
+  if (!raw) return "An unexpected error occurred. Please try again.";
+
+  if (/scoring unavailable/i.test(raw)) {
+    return "Scoring service is warming up or temporarily unavailable. Please tap 'Check my readiness' again in a few seconds.";
+  }
+  if (/failed to fetch|networkerror|network error|load failed/i.test(raw)) {
+    return "Unable to connect to the server. Please check your internet connection and try again.";
+  }
+  if (/bad gateway|service unavailable|gateway timeout/i.test(raw)) {
+    return "Server is temporarily waking up. Please wait a moment and try again.";
+  }
+  if (/all DPI sources failed/i.test(raw)) {
+    return "All data verification sources failed to respond. Please start over or check your consent options.";
+  }
+  if (/consent gate/i.test(raw)) {
+    return "Your consent has expired or is inactive. Please start over and grant consent.";
+  }
+  return raw;
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [language, setLanguage] = useState("en-IN");
@@ -145,7 +167,7 @@ export default function App() {
   const missingRequired = REQUIRED_IDS.filter((id) => !scope.includes(id));
   const missingLabels = missingRequired.map((id) => t[SCOPE_LABEL_KEY[id]]).join(", ");
 
-  const fail = (err) => setError(err.message || String(err));
+  const fail = (err) => setError(formatErrorMessage(err));
 
   const start = async () => {
     setBusy(true);
@@ -382,16 +404,23 @@ export default function App() {
               <Icon name="bell" size={15} />
               {soundOn ? t.soundOff : t.soundOn}
             </button>
+            {step !== "start" && (
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={restart}
+                aria-label={t.startOver}
+              >
+                <Icon name="rotate" size={14} />
+                {t.startOver}
+              </button>
+            )}
           </div>
-          {step === "start" ? (
+          {step === "start" && (
             <nav className="topnav" aria-label="Primary">
               <a href="#how-it-works">{t.navHow}</a>
               <a href="#trust">{t.navTrust}</a>
             </nav>
-          ) : (
-            <button type="button" className="link-btn" onClick={restart}>
-              {t.startOver}
-            </button>
           )}
         </div>
       </header>
@@ -413,7 +442,8 @@ export default function App() {
         <main id="main-content">
           {error && (
             <div className="error" role="alert" ref={errorRef} tabIndex={-1}>
-              {error}
+              <Icon name="alert" size={18} />
+              <span>{error}</span>
             </div>
           )}
 

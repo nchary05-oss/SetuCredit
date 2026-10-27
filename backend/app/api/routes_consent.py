@@ -1,7 +1,10 @@
 """Consent grant/revoke (DPDP): required before any DPI pull."""
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException
 
+from app import scoring_client
 from app import session as sess
 from app.api.routes_sessions import DbDep, load_session_or_404
 from app.audit import service as audit
@@ -45,6 +48,7 @@ async def create_consent(
         consent_id=consent.id,
     )
     await db.commit()
+    asyncio.create_task(scoring_client.warmup())
     return _consent_view(consent)
 
 

@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://setucredit:setucredit@localhost:5432/setucredit"
     redis_url: str = "redis://localhost:6379/0"
     scoring_service_url: str = "http://localhost:8001"
+    scoring_timeout_seconds: float = 60.0
     partner_webhook_url: str | None = None
     webhook_secret: str = "dev-webhook-secret"
     # Browsers on Render call the backend's public URL directly (the PWA's

@@ -286,3 +286,10 @@ async def test_invalid_aadhaar_rejected(client):
         f"/v1/sessions/{session_id}/otp", json=_send_payload(aadhaar="123456789012")
     )
     assert r.status_code == 422
+
+
+async def test_scoring_warmup():
+    from app.scoring_client import warmup
+
+    # Best-effort warmup should never raise even if endpoint is slow or failing
+    await warmup()

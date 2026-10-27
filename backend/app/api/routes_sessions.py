@@ -1,11 +1,13 @@
 """Session lifecycle: create, inspect, UIDAI OTP Auth (stub by default)."""
 
+import asyncio
 import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import scoring_client
 from app import session as sess
 from app.audit import service as audit
 from app.config import get_settings
@@ -50,6 +52,7 @@ async def create_session(body: SessionCreate, db: DbDep):
     data = await sess.create_session(redis_client, body.language)
     await audit.emit(db, session_id=data["session_id"], event_type="session.created")
     await db.commit()
+    asyncio.create_task(scoring_client.warmup())
     return _view(data)
 
 

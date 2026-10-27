@@ -87,6 +87,19 @@ const ICONS = {
     </>
   ),
   moon: <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5z" />,
+  rotate: (
+    <>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </>
+  ),
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 20, className }) {
