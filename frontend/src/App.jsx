@@ -312,7 +312,18 @@ export default function App() {
     setConfirmed(false);
     setPullStatus({});
     try {
-      const r = await api.appraise(session.session_id);
+      let r;
+      try {
+        r = await api.appraise(session.session_id);
+      } catch (firstErr) {
+        // If scoring service was temporarily waking up, retry once automatically
+        if (/scoring|502|gateway|temporarily|failed to fetch/i.test(firstErr.message || "")) {
+          await new Promise((res) => setTimeout(res, 2500));
+          r = await api.appraise(session.session_id);
+        } else {
+          throw firstErr;
+        }
+      }
       for (const id of SCOPE_IDS.filter((s) => scope.includes(s))) {
         await new Promise((res) => setTimeout(res, 300));
         const status = r.sources?.[id]?.status ?? "failed";
