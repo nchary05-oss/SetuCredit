@@ -24,23 +24,35 @@ never persisted — not even as derived features.
 ## Quickstart
 
 ```bash
-# full container stack (PWA :8080, backend :8000, scoring :8001)
-docker compose -f infra/docker-compose.yml --profile app up --build
+make setup        # python deps (.env, frontend deps)
+make infra        # postgres + redis in Docker
 
-# infra only, then run services locally
-docker compose -f infra/docker-compose.yml up -d postgres redis
-uv sync --all-packages
-uv run uvicorn app.main:app --port 8000          # backend (repo root resolves workspace)
-uv run uvicorn service.main:app --port 8001      # scoring
-cd frontend && npm install && npm run dev        # Vite proxies /v1 → :8000
+# run services locally (three terminals, or `make up` for one-command Docker)
+make backend      # backend API     :8000
+make scoring      # scoring service :8001
+make frontend     # PWA dev server  :5173 (proxies /v1 → :8000)
 ```
 
-Migrations run from `backend/`:
+One command instead — full container stack (PWA :8080, backend :8000, scoring :8001):
 
 ```bash
-uv run alembic upgrade head
-uv run alembic revision --autogenerate -m "..."   # needs live Postgres
+make up           # build + run everything
+make down         # stop it
 ```
+
+Migrations (reads the root `.env` — no cd-ing into `backend/` needed):
+
+```bash
+make db-upgrade                     # apply all pending migrations
+make db-revision m="add foo table"  # autogenerate one (needs live Postgres)
+```
+
+Checks: `make test` (pytest), `make lint` (ruff), `make fmt`.
+
+Prefer raw commands? Equivalent manual steps: `uv sync --all-packages`;
+`docker compose -f infra/docker-compose.yml up -d postgres redis`;
+`uv run uvicorn app.main:app --port 8000` (backend) and
+`uv run uvicorn service.main:app --port 8001` (scoring) from the repo root;
 
 ## Borrower journey
 
