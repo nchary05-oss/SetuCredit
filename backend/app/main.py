@@ -34,14 +34,25 @@ def create_app() -> FastAPI:
     )
 
     # Browsers deployed on Render hit this API directly (www origin differs);
-    # cors_origins stays empty locally, where the PWA is same-origin.
-    settings_cors = get_settings().cors_origin_list
+    # In dev mode, allow local Vite/Docker origins so direct browser requests work.
+    settings = get_settings()
+    settings_cors = settings.cors_origin_list
+    if not settings_cors and settings.env == "dev":
+        settings_cors = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
     if settings_cors:
         from fastapi.middleware.cors import CORSMiddleware
 
         app.add_middleware(
             CORSMiddleware,
             allow_origins=settings_cors,
+            allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
